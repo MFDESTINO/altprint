@@ -1,46 +1,54 @@
+#!/usr/bin/env python3
+
 import matplotlib.pyplot as plt
+import numpy as np
 
-def arrayplot(xarray, yarray):
-    for i in range(len(xarray) - 1):
-        x = xarray[i]
-        y = yarray[i]
-        dx = xarray[i + 1] - x
-        dy = yarray[i + 1] - y
-
+def plot_path(path):
+    # Plota a trajetória, usando setas para indicar a direção
+    # path: matriz de pontos da trajetória
+    plt.plot(path[0], path[1], drawstyle='steps')
+    for i in range(len(path[0]) - 1):
+        x = path[0][i]
+        y = path[1][i]
+        dx = path[0][i + 1] - x
+        dy = path[1][i + 1] - y
         plt.arrow(x, y, dx, dy,
               shape='full',
               lw=0,
               length_includes_head=True,
-              head_width=.1)
+              head_width=.3)
 
-def generate_scaffold(n):
-    a = [0.0, 0.0]
-    x = []
-    y = []
+def gen_square_path(n):
+    # cria uma trajetória quadrangular
+    # n: dimensao externa do quadrado, em u.a.
+    # retorna uma matriz com pontos (x,y) da trajetoria
+    # Como o espaço entre as linhas é de uma u.a., o número de movimentos
+    # feitos é de 2n + 2
+    x = np.zeros(n * 2 + 2)
+    y = np.zeros(n * 2 + 2)
     for i in range(n * 2 + 2):
         if i % 2:
-            a[1] = n - a[1]
+            y[i] = n - y[i - 1]
+            x[i] = x[i - 1]
         else:
-            a[0] = i / 2
-        x.append(a[0])
-        y.append(a[1])
+            x[i] = i / 2
+            y[i] = y[i - 1]
     return [x, y]
 
-def transform(xarray, yarray, n):
-    u = []
-    v = []
-    for i in range(len(xarray)):
-        x = n - yarray[i]
-        y = n - xarray[i]
-        u.append(x)
-        v.append(y)
+def rotate_mirror(path):
+    # Rotaciona em 90 e inverte a trajetória
+    # path: matriz de pontos da trajetória
+    n = int((len(path[0]) - 2) / 2)
+    u = np.zeros(n * 2 + 2)
+    v = np.zeros(n * 2 + 2)
+    for i in range(n * 2 + 2):
+        u[i] = n - path[1][i]
+        v[i] = n - path[0][i]
     return [u, v]
 
-size = 40
-asd = generate_scaffold(size)
-fgh = transform(asd[0], asd[1], size)
+asd = gen_square_path(20)
+fgh = rotate_mirror(asd)
 
-plt.plot(asd[0], asd[1], drawstyle='steps')
-plt.plot(fgh[0], fgh[1], drawstyle='steps')
-'''arrayplot(fgh[0], fgh[1])'''
+#plot_path(asd)
+plot_path(fgh)
 plt.show()
