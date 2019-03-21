@@ -35,20 +35,33 @@ def gen_square_path(n):
             y[i] = y[i - 1]
     return [x, y]
 
-def rotate_mirror(path):
-    # Rotaciona em 90 e inverte a trajetória
+def rotate_path(path):
+    # Rotaciona em 90 graus antihorário a trajetória
     # path: matriz de pontos da trajetória
+    # T(x,y) = (-y, x)
     n = int((len(path[0]) - 2) / 2)
     u = np.zeros(n * 2 + 2)
     v = np.zeros(n * 2 + 2)
     for i in range(n * 2 + 2):
         u[i] = n - path[1][i]
-        v[i] = n - path[0][i]
+        v[i] = path[0][i]
     return [u, v]
 
-asd = gen_square_path(20)
-fgh = rotate_mirror(asd)
+def mirror_path(path):
+    # Inverte a trajetória
+    # path: matriz de pontos da trajetória
+    # T(x,y) = (x, -y)
+    n = int((len(path[0]) - 2) / 2)
+    u = np.zeros(n * 2 + 2)
+    v = np.zeros(n * 2 + 2)
+    for i in range(n * 2 + 2):
+        u[i] = path[0][i]
+        v[i] = n - path[1][i]
+    return [u, v]
 
-#plot_path(asd)
-plot_path(fgh)
+asd = gen_square_path(4)
+fgh = rotate_path(asd)
+
+plot_path(asd)
+#plot_path(fgh)
 plt.show()
