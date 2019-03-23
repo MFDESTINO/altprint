@@ -2,6 +2,7 @@
 
 import matplotlib.pyplot as plt
 import numpy as np
+import configparser
 
 def plot_path(path):
     # Plota a trajetória, usando setas para indicar a direção
@@ -18,12 +19,14 @@ def plot_path(path):
               length_includes_head=True,
               head_width=.3)
 
-def gen_square_path(n):
+def gen_square_path(l, a):
     # cria uma trajetória quadrangular
     # n: dimensao externa do quadrado, em u.a.
     # retorna uma matriz com pontos (x,y) da trajetoria
     # Como o espaço entre as linhas é de uma u.a., o número de movimentos
     # feitos é de 2n + 2
+
+    n = int(l/a)
     x = np.zeros(n * 2 + 2)
     y = np.zeros(n * 2 + 2)
     for i in range(n * 2 + 2):
@@ -33,27 +36,35 @@ def gen_square_path(n):
         else:
             x[i] = i / 2
             y[i] = y[i - 1]
-    return [x, y]
+    path = np.array((x, y)) * a
+    return path
 
-def rotate(path):
+def rotate(path, l):
     # Rotaciona em 90 graus antihorário a trajetória
     # path: matriz de pontos da trajetória
     # T(x,y) = (a - y, x)
-    n = int((len(path[0]) - 2) / 2)
-    a = np.ones(len(path[1])) * n
-    return [a - path[1], path[0]]
+    a = np.full(len(path[1]), l)
+    return np.array((a - path[1], path[0]))
 
-def mirror(path):
+def mirror(path,  l):
     # Inverte a trajetória
     # path: matriz de pontos da trajetória
     # T(x,y) = (x, a - y)
-    n = int((len(path[0]) - 2) / 2)
-    a = np.ones(len(path[1])) * n
-    return [path[0], a - path[1]]
+    a = np.full(len(path[1]), l)
+    return np.array((path[0], a - path[1]))
 
-asd = gen_square_path(4)
-fgh = mirror(rotate(asd))
+def output_gcode(path):
+    with open('output.gcode', 'w') as f:
+        for i in range(len(path[0])):
+            f.write('G1 X{:.5} Y{:.5}\n'.format(path[0][i], path[1][i]))
 
-plot_path(asd)
-#plot_path(fgh)
-plt.show()
+
+config = configparser.ConfigParser()
+config.read('config.ini')
+
+l = float(config['DEFAULT']['length'])
+a = float(config['DEFAULT']['space'])
+
+asd = gen_square_path(l, a)
+fgh = mirror(rotate(asd, l), l)
+output_gcode(asd)
