@@ -40,8 +40,8 @@ def extrude(x, y, flow):
     return extrusion
 
 
-def output_gcode(x, y, e):
-    with open('output.gcode', 'w') as f:
+def output_gcode(x, y, e, output_name):
+    with open(output_name + '.gcode', 'w') as f:
         for i in range(len(x)):
             f.write('G1 X{:.5} Y{:.5} E{:.5}\n'.format(x[i], y[i], e[i]))
 
@@ -52,10 +52,30 @@ config.read('config.ini')
 length = float(config['DEFAULT']['length'])
 gap = float(config['DEFAULT']['gap'])
 flow = float(config['DEFAULT']['flow'])
+bed_x = float(config['DEFAULT']['bed_x'])
+bed_y = float(config['DEFAULT']['bed_x'])
+output_name = config['DEFAULT']['output']
+
+text = '''
+  ___           __  __     _    _
+ / __| __ __ _ / _|/ _|___| |__| |___ _ _
+ \__ \/ _/ _` |  _|  _/ _ \ / _` / -_) '_|
+ |___/\__\__,_|_| |_| \___/_\__,_\___|_|
+
+     3d printing path generator
+
+     Square path
+     Length: {} mm
+     Gap : {} mm
+     Flow multiplier: {} mm
+     Bed size: {} mm x {} mm
+     Output file: {}.gcode
+'''
+print(text.format(length, gap, flow, bed_x, bed_y, output_name))
 
 x, y = gen_square(int(length / gap))
 x, y = scale(x, y, gap, gap)
-x, y = translate(x, y, 50, 50)
+x, y = translate(x, y, (bed_x - length) / 2, (bed_y - length) / 2)
 e = extrude(x, y, flow)
 
-output_gcode(x, y, e)
+output_gcode(x, y, e, output_name)
