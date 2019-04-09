@@ -39,6 +39,10 @@ def extrude(x, y, flow):
         extrusion[i] = np.sqrt((dx**2) + (dy**2)) * flow + extrusion[i-1]
     return extrusion
 
+def flow_math(w, h, df):
+    a = 4 * w * h + (np.pi - 4) * h**2
+    b = np.pi * df**2
+    return a / b
 
 def output_gcode(x, y, e, output_name):
     with open(output_name + '.gcode', 'w') as f:
@@ -51,10 +55,14 @@ config.read('config.ini')
 
 length = float(config['DEFAULT']['length'])
 gap = float(config['DEFAULT']['gap'])
-flow = float(config['DEFAULT']['flow'])
+width = float(config['DEFAULT']['width'])
+height = float(config['DEFAULT']['height'])
+df = float(config['DEFAULT']['filament_d'])
 bed_x = float(config['DEFAULT']['bed_x'])
 bed_y = float(config['DEFAULT']['bed_x'])
 output_name = config['DEFAULT']['output']
+
+flow = flow_math(width, height, df)
 
 text = '''
   ___           __  __     _    _
@@ -66,12 +74,15 @@ text = '''
 
      Square path
      Length: {} mm
-     Gap : {} mm
-     Flow multiplier: {} mm
+     Gap: {} mm
+     Raster width: {} mm
+     Raster height: {} mm
+     Filament diameter: {} mm
+     Flow multiplier: {:.5} mm
      Bed size: {} mm x {} mm
      Output file: {}.gcode
 '''
-print(text.format(length, gap, flow, bed_x, bed_y, output_name))
+print(text.format(length, gap, width, height, df, flow, bed_x, bed_y, output_name))
 
 x, y = gen_square(int(length / gap))
 x, y = scale(x, y, gap, gap)
