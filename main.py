@@ -31,6 +31,9 @@ def scale(x, y, a, b):
 def translate(x, y, dx, dy):
     return (x + dx, y + dy)
 
+def rotate(x, y):
+    return (y * -1, x)
+
 def extrude(x, y, flow):
     extrusion = np.zeros(len(x))
     for i in range(1, len(x)):
@@ -42,7 +45,9 @@ def extrude(x, y, flow):
 def flow_math(w, h, df):
     a = 4 * w * h + (np.pi - 4) * h**2
     b = np.pi * df**2
-    return a / b
+    adjust = 1.058 - 0.11154 * (w - 0.48)
+    flow = a / b * adjust
+    return flow
 
 def output_gcode(x, y, e, output_name):
     with open(output_name + '.gcode', 'w') as f:
@@ -86,7 +91,15 @@ print(text.format(length, gap, width, height, df, flow, bed_x, bed_y, output_nam
 
 x, y = gen_square(int(length / gap))
 x, y = scale(x, y, gap, gap)
+
+x, y = rotate(x, y)
+x, y = scale(x, y, 1, -1)
+x, y = translate(x, y, length, length)
+
 x, y = translate(x, y, (bed_x - length) / 2, (bed_y - length) / 2)
+
 e = extrude(x, y, flow)
 
+plot_path(x, y)
+plt.show()
 output_gcode(x, y, e, output_name)
