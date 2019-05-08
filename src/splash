@@ -11,6 +11,7 @@
    Gap: {} mm
    Raster width: {} mm
    Raster height: {} mm
+   Raster angle: {}°
    Filament diameter: {} mm
    Adjust: {} %
    Flow multiplier: {:.5} mm
