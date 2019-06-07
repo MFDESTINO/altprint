@@ -47,6 +47,7 @@ print(splash.format(length,
                   width,
                   height,
                   angle0,
+                  angle1,
                   filament_d,
                   adjust * 100,
                   flow,
@@ -55,18 +56,17 @@ print(splash.format(length,
                   output_name))
 
 
+
+layers = []
 path_a = gen_square(length, length, gap, angle0)
 path_a = centralize(path_a, bed_x, bed_y)
 x, y = path_a.xy
 e = extrude(x, y, flow)
 
-path_b = gen_square(length, length, gap, angle1, True, True)
-print(path_b.length)
+path_b = gen_square(length, length, gap, angle1, False, False)
 path_b = centralize(path_b, bed_x, bed_y)
 x1, y1 = path_b.xy
 e1 = extrude(x1, y1, flow)
-
-layers = []
 for i in range(100):
     if i%2:
         layers.append(gen_layer(x1, y1, height*(i+1), e1))

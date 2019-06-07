@@ -1,0 +1,20 @@
+
+ ___           __  __     _    _
+/ __| __ __ _ / _|/ _|___| |__| |___ _ _
+\__ \/ _/ _` |  _|  _/ _ \ / _` / -_) '_|
+|___/\__\__,_|_| |_| \___/_\__,_\___|_|
+
+   3d printing path generator
+
+   Square path
+   Length: {} mm
+   Gap: {} mm
+   Raster width: {} mm
+   Raster height: {} mm
+   Angle 0: {}°
+   Angle 1: {}°
+   Filament diameter: {} mm
+   Adjust: {} %
+   Flow multiplier: {:.5} mm
+   Bed size: {} mm x {} mm
+   Output file: {}.gcode
