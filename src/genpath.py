@@ -46,7 +46,7 @@ def union_path(lines):
     multi_line = MultiLineString(path)
     return multi_line
 
-def gen_square(size_x, size_y, gap, raster_ang):
+def gen_square(size_x, size_y, gap, raster_ang, mirrorx=False, mirrory=False):
     borders_coords = [(0,0),(1,0),(1,1),(0,1)]
     borders = LinearRing(borders_coords)
     borders = affinity.scale(borders, size_x, size_y)
@@ -59,7 +59,12 @@ def gen_square(size_x, size_y, gap, raster_ang):
     path = union_path(lines)
     path = linemerge(path)
     path = affinity.rotate(path, raster_ang * -1)
+    if mirrorx == True:
+        path = affinity.scale(path, -1, 1)
+    if mirrory == True:
+        path = affinity.scale(path, 1, -1)
     path = affinity.translate(path, path.bounds[0] * -1, path.bounds[1] * -1)
+
     return path
 
 def centralize(path, bed_x, bed_y):
