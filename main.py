@@ -15,10 +15,6 @@ with open('assets/footer.gcode', 'r') as f:
     footer = f.readlines()
 footer = "".join(footer)
 
-with open('assets/second.gcode', 'r') as f:
-    second = f.readlines()
-second_header = "".join(second)
-
 with open('assets/splash.txt', 'r') as f:
     splash = f.readlines()
 splash = "".join(splash)
@@ -26,7 +22,8 @@ splash = "".join(splash)
 config = configparser.ConfigParser()
 config.read('config.ini')
 
-length = float(config['DEFAULT']['length'])
+size_x = float(config['DEFAULT']['size_x'])
+size_y = float(config['DEFAULT']['size_y'])
 gap = float(config['DEFAULT']['gap'])
 width = float(config['DEFAULT']['width'])
 height = float(config['DEFAULT']['height'])
@@ -42,7 +39,7 @@ output_name = date + '-' + output_name
 
 flow = flow_math(width, height, filament_d, adjust)
 
-print(splash.format(length,
+print(splash.format(size_x,
                   gap,
                   width,
                   height,
@@ -58,20 +55,41 @@ print(splash.format(length,
 
 
 layers = []
-path_a = gen_square(length, length, gap, angle0)
+path_a = gen_square(size_x, size_y, gap, 0)
 path_a = centralize(path_a, bed_x, bed_y)
 x, y = path_a.xy
 e = extrude(x, y, flow)
 
-path_b = gen_square(length, length, gap, angle1, False, False)
+path_b = gen_square(size_x, size_y, gap, 45, False, False)
 path_b = centralize(path_b, bed_x, bed_y)
 x1, y1 = path_b.xy
 e1 = extrude(x1, y1, flow)
-for i in range(100):
-    if i%2:
-        layers.append(gen_layer(x1, y1, height*(i+1), e1))
-    else:
-        layers.append(gen_layer(x, y, height*(i+1), e))
+
+path_c = gen_square(size_x, size_y, gap, 90, False, False)
+path_c = centralize(path_c, bed_x, bed_y)
+x2, y2 = path_c.xy
+e2 = extrude(x2, y2, flow)
+
+path_d = gen_square(size_x, size_y, gap, 135, False, False)
+path_d = centralize(path_d, bed_x, bed_y)
+x3, y3 = path_d.xy
+e3 = extrude(x3, y3, flow)
+
+'''
+for i in range(4):
+    layers.append(gen_layer(x, y, height*(2*i+1), e))
+    layers.append(gen_layer(x1, y1, height*(2*i+2), e1))
+'''
+
+layers.append(gen_layer(x, y, 0.2, e))
+layers.append(gen_layer(x1, y1, 0.4, e1))
+layers.append(gen_layer(x3, y3, 0.6, e2))
+layers.append(gen_layer(x3, y3, 0.8, e3))
+
+layers.append(gen_layer(x, y, 1.0, e))
+layers.append(gen_layer(x1, y1, 1.2, e1))
+layers.append(gen_layer(x3, y3, 1.4, e2))
+layers.append(gen_layer(x3, y3, 1.6, e3))
 
 output_gcode(layers, output_name, date, header, footer)
 
