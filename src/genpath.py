@@ -1,6 +1,7 @@
 from shapely.geometry import LineString, LinearRing, MultiLineString, Point, MultiPoint
 from shapely.ops import linemerge
 from shapely import affinity
+import numpy as np
 
 def gen_lines(mx, my, gap):
     lines = []
@@ -46,7 +47,45 @@ def union_path(lines):
     multi_line = MultiLineString(path)
     return multi_line
 
-def gen_square(size_x, size_y, gap, raster_ang, mirrorx=False, mirrory=False):
+def contour(shape, L):
+    shape_border = []
+    for i in range(len(shape)):
+        A = shape[i-2]
+        B = shape[i-1]
+        C = shape[i]
+
+        u = LineString([A,B])
+        v = LineString([B,C])
+
+        ux = B[0] - A[0]
+        uy = B[1] - A[1]
+        vx = C[0] - B[0]
+        vy = C[1] - B[1]
+
+        udx = L*uy/u.length
+        udy = L*ux/u.length
+        vdx = L*vy/v.length
+        vdy = L*vx/v.length
+
+        ut = affinity.translate(u,  udx, -udy)
+        vt = affinity.translate(v, vdx, -vdy)
+        Ax = ut.coords[0][0]
+        Ay = ut.coords[0][1]
+        Bx = ut.coords[1][0]
+        By = ut.coords[1][1]
+        Cx = vt.coords[0][0]
+        Cy = vt.coords[0][1]
+        Dx = vt.coords[1][0]
+        Dy = vt.coords[1][1]
+
+        a = np.array([[Ay-By, Bx-Ax], [Cy-Dy, Dx-Cx]])
+        b = np.array([Bx*Ay-Ax*By,  Dx*Cy-Cx*Dy])
+        x = np.linalg.solve(a, b)
+
+        shape_border.append(x)
+    return shape_border
+
+def gen_square(size_x, size_y, gap, raster_ang):
     borders_coords = [(0,0),(1,0),(1,1),(0,1)]
     borders = LinearRing(borders_coords)
     borders = affinity.scale(borders, size_x, size_y)
@@ -59,10 +98,6 @@ def gen_square(size_x, size_y, gap, raster_ang, mirrorx=False, mirrory=False):
     path = union_path(lines)
     path = linemerge(path)
     path = affinity.rotate(path, raster_ang * -1)
-    if mirrorx == True:
-        path = affinity.scale(path, -1, 1)
-    if mirrory == True:
-        path = affinity.scale(path, 1, -1)
     path = affinity.translate(path, path.bounds[0] * -1, path.bounds[1] * -1)
 
     return path

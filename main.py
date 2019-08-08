@@ -1,11 +1,15 @@
 #!/usr/bin/env python3
-from src.genpath import gen_square, centralize
+from src.genpath import gen_square, centralize, contour
 from src.flow import flow_math, extrude
 from src.gcode import output_gcode, gen_layer
+from src.plotpath import plot_lines, plot_coords
 from shapely.figures import SIZE, plot_bounds
 import matplotlib.pyplot as plt
 import numpy as np
 import configparser
+
+from shapely.geometry import LineString, LinearRing, MultiLineString, Point, MultiPoint, Polygon
+from shapely import affinity
 
 with open('assets/header.gcode', 'r') as f:
     header = f.readlines()
@@ -54,61 +58,24 @@ print(splash.format(size_x,
 
 
 
-layers = []
-path_a = gen_square(size_x, size_y, gap, 0)
-path_a = centralize(path_a, bed_x, bed_y)
-x, y = path_a.xy
-e = extrude(x, y, flow)
+shape = [(0,0), (10,0), (10, 10), (0,10)]
+square = LinearRing(shape)
 
-path_b = gen_square(size_x, size_y, gap, 45, False, False)
-path_b = centralize(path_b, bed_x, bed_y)
-x1, y1 = path_b.xy
-e1 = extrude(x1, y1, flow)
 
-path_c = gen_square(size_x, size_y, gap, 90, False, False)
-path_c = centralize(path_c, bed_x, bed_y)
-x2, y2 = path_c.xy
-e2 = extrude(x2, y2, flow)
-
-path_d = gen_square(size_x, size_y, gap, 135, False, False)
-path_d = centralize(path_d, bed_x, bed_y)
-x3, y3 = path_d.xy
-e3 = extrude(x3, y3, flow)
-
-'''
-for i in range(4):
-    layers.append(gen_layer(x, y, height*(2*i+1), e))
-    layers.append(gen_layer(x1, y1, height*(2*i+2), e1))
-'''
-
-layers.append(gen_layer(x, y, 0.2, e))
-layers.append(gen_layer(x1, y1, 0.4, e1))
-layers.append(gen_layer(x3, y3, 0.6, e2))
-layers.append(gen_layer(x3, y3, 0.8, e3))
-
-layers.append(gen_layer(x, y, 1.0, e))
-layers.append(gen_layer(x1, y1, 1.2, e1))
-layers.append(gen_layer(x3, y3, 1.4, e2))
-layers.append(gen_layer(x3, y3, 1.6, e3))
-
-output_gcode(layers, output_name, date, header, footer)
+L = -0.4
+testlines = []
+square_border = LinearRing(contour(shape, L))
 
 fig = plt.figure(1, figsize=SIZE, dpi=90)
 
-ax = fig.add_subplot(121)
-x2, y2 = path_a.xy
+ax = fig.add_subplot(111)
+x, y = square.xy
+ax.plot(x,y)
+x2, y2 = square_border.xy
 ax.plot(x2, y2)
-plot_bounds(ax, path_a)
 ax.grid(True)
 ax.set_title('A')
 plt.axis('equal')
 
-ax = fig.add_subplot(122)
-x2, y2 = path_b.xy
-ax.plot(x2, y2)
-plot_bounds(ax, path_b)
-ax.grid(True)
-ax.set_title('B')
-plt.axis('equal')
 
 plt.show()
