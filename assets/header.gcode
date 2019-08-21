@@ -10,6 +10,7 @@ G32 S1 ; perform auto bed leveling
 ; layer 1, Z = 0.200
 T0
 M102
+M106 S255
 G92 E0.0000
 G1 E-1.0000 F2400
 M103

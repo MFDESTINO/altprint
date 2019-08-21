@@ -85,10 +85,8 @@ def contour(shape, L):
         shape_border.append(x)
     return shape_border
 
-def gen_square(size_x, size_y, gap, raster_ang):
-    borders_coords = [(0,0),(1,0),(1,1),(0,1)]
+def gen_square(borders_coords, gap, raster_ang):
     borders = LinearRing(borders_coords)
-    borders = affinity.scale(borders, size_x, size_y)
     borders = affinity.rotate(borders, raster_ang)
     borders=affinity.translate(borders, borders.bounds[0] * -1,  borders.bounds[1] * -1)
     prelines = gen_lines(int(borders.bounds[2] / gap), borders.bounds[3], gap)

@@ -1,10 +1,16 @@
 def gen_layer(x, y, z, e):
     layer = []
-    layer.append('G92 E0.0000\n')
-    layer.append('M106 S255\n')
     layer.append('G1 Z{0:.3f} F3000\n'.format(z))
-    for i in range(len(x)):
-        layer.append('G1 X{0:.3f} Y{1:.3f} E{2:.4f}\n'.format(x[i], y[i], e[i]))
+    layer.append('G1 X{0:.3f} Y{1:.3f}\n'.format(x[0], y[0]))
+    layer.append('M101\n')
+    layer.append('G1 E0.0000\n')
+    layer.append('G92 E0.0000\n')
+    for i in range(len(x)-1):
+        layer.append('G1 X{0:.3f} Y{1:.3f} E{2:.4f}\n'.format(x[i+1], y[i+1], e[i+1]))
+    layer.append('M102\n')
+    layer.append('G92 E0.0000\n')
+    layer.append('G1 E-0.5000\n')
+    layer.append('M103\n')
     layer = "".join(layer)
     return layer
 

@@ -58,21 +58,54 @@ print(splash.format(size_x,
 
 
 
-shape = [(0,0), (10,0), (10, 10), (0,10)]
-square = LinearRing(shape)
+shape = [(0,0), (20,0), (40, 20), (20,20)]
+square = []
+square2 = []
+shape_adj = contour(shape, -0.24)
+shape_i = contour(shape_adj, -2.5)
+
+L = -0.5
+for i in range(5):
+    square.append(LinearRing(contour(shape_adj, L*i)))
+    print(square[i].bounds[0])
+sq = LinearRing(contour(shape_adj, -2.5))
+path_i = gen_square(shape_i, 0.5, 90)
+path_i = affinity.translate(path_i, sq.bounds[0], sq.bounds[1])
+square.append(path_i)
+path_c = MultiLineString(square)
+#path_c = centralize(path_c, bed_x, bed_y)
+
+for i in range(5):
+    square2.append(LinearRing(contour(shape_adj, L*i)))
+path_i = gen_square(shape_i, 0.5, -45)
+path_i = affinity.translate(path_i, 7, 2.75)
+square2.append(path_i)
+path_c2 = MultiLineString(square2)
+#path_c2 = centralize(path_c2, bed_x, bed_y)
 
 
-L = -0.4
-testlines = []
-square_border = LinearRing(contour(shape, L))
+layers = []
+for i in range(16):
+    for j in range(len(path_c)):
+        x, y = path_c[j].xy
+        e = extrude(x, y, flow)
+        layers.append(gen_layer(x, y, 0.2 * ((2*i)+1), e))
+    for j in range(len(path_c2)):
+        x, y = path_c2[j].xy
+        e = extrude(x, y, flow)
+        layers.append(gen_layer(x, y, 0.2 * ((2*i)+2), e))
+
+
+
+output_gcode(layers, output_name, date, header, footer)
 
 fig = plt.figure(1, figsize=SIZE, dpi=90)
 
 ax = fig.add_subplot(111)
-x, y = square.xy
-ax.plot(x,y)
-x2, y2 = square_border.xy
-ax.plot(x2, y2)
+
+for l in path_c:
+    x, y = l.xy
+    ax.plot(x,y)
 ax.grid(True)
 ax.set_title('A')
 plt.axis('equal')
