@@ -1,6 +1,7 @@
 from shapely.geometry import LineString, LinearRing, MultiLineString, Point, MultiPoint
 from shapely.ops import linemerge
 from shapely import affinity
+from collections import deque
 import numpy as np
 
 def gen_lines(mx, my, gap):
@@ -83,7 +84,9 @@ def contour(shape, L):
         x = np.linalg.solve(a, b)
 
         shape_border.append(x)
-    return shape_border
+    shape_border = deque(shape_border)
+    shape_border.rotate(-1)
+    return list(shape_border)
 
 def gen_square(borders_coords, gap, raster_ang):
     borders = LinearRing(borders_coords)
@@ -101,6 +104,7 @@ def gen_square(borders_coords, gap, raster_ang):
     return path
 
 def centralize(path, bed_x, bed_y):
+    path = affinity.translate(path, path.bounds[0] * -1,  path.bounds[1] * -1)
     dx = bed_x / 2 - path.bounds[2] / 2
     dy = bed_y / 2 - path.bounds[3] / 2
     path = affinity.translate(path, dx, dy)
