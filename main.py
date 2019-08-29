@@ -2,7 +2,7 @@
 from src.genpath import gen_square, centralize, contour
 from src.flow import flow_math, extrude
 from src.gcode import output_gcode, gen_layer
-from src.plotpath import plot_lines, plot_coords
+from src.plotpath import plot_lines, plot_coords, plot_layer
 from shapely.figures import SIZE, plot_bounds
 import matplotlib.pyplot as plt
 import numpy as np
@@ -10,6 +10,31 @@ import configparser
 
 from shapely.geometry import LineString, LinearRing, MultiLineString, Point, MultiPoint, Polygon
 from shapely import affinity
+
+class Layer:
+    def __init__(self, shape, out_adj, perimeters_num, gap, bed, angle):
+        self.perimeters = []
+        self.inner_shape = []
+        self.shape = contour(shape, out_adj)
+        self.out_adj = out_adj
+        self.perimeters_num = perimeters_num
+        self.gap = gap
+        self.angle = angle
+        self.inner_shape = gen_square(contour(self.shape,
+            - self.gap * self.perimeters_num), self.gap, self.angle)
+
+        for i in range(self.perimeters_num):
+            self.perimeters.append(LinearRing(contour(self.shape, - self.gap * i)))
+
+        self.perimeters = MultiLineString(self.perimeters)
+        self.bounds = [self.perimeters.bounds[2] - self.perimeters.bounds[0],
+                       self.perimeters.bounds[3] - self.perimeters.bounds[1]]
+
+    def translate(self, dx, dy):
+        self.inner_shape = affinity.translate(self.inner_shape, dx, dy)
+        self.perimeters = affinity.translate(self.perimeters, dx, dy)
+
+
 
 with open('assets/header.gcode', 'r') as f:
     header = f.readlines()
@@ -56,59 +81,42 @@ print(splash.format(size_x,
                   bed_y,
                   output_name))
 
+bed = [bed_x, bed_y]
 
-
-shape = [(0,0), (20,0), (40, 20), (20,20)]
-square = []
-square2 = []
-shape_adj = contour(shape, -0.24)
-shape_i = contour(shape_adj, -2.5)
-
-L = -0.5
-for i in range(5):
-    square.append(LinearRing(contour(shape_adj, L*i)))
-    print(square[i].bounds[0])
-sq = LinearRing(contour(shape_adj, -2.5))
-path_i = gen_square(shape_i, 0.5, 90)
-path_i = affinity.translate(path_i, sq.bounds[0], sq.bounds[1])
-square.append(path_i)
-path_c = MultiLineString(square)
-#path_c = centralize(path_c, bed_x, bed_y)
-
-for i in range(5):
-    square2.append(LinearRing(contour(shape_adj, L*i)))
-path_i = gen_square(shape_i, 0.5, -45)
-path_i = affinity.translate(path_i, 7, 2.75)
-square2.append(path_i)
-path_c2 = MultiLineString(square2)
-#path_c2 = centralize(path_c2, bed_x, bed_y)
-
+shape = [(0,0), (20,0),(30,20), (10,20)]
+skirt = Layer(shape, 5, 4, 0.5, bed, 0)
+a = Layer(shape, -0.48/2, 5, 0.5, bed, 45)
+b = Layer(shape, -0.48/2, 5, 0.5, bed, -45)
+skirt.translate((bed_x - a.bounds[0])/2, (bed_y - a.bounds[1])/2)
+a.translate((bed_x - a.bounds[0])/2, (bed_y - a.bounds[1])/2)
+b.translate((bed_x - b.bounds[0])/2, (bed_y - b.bounds[1])/2)
 
 layers = []
+
+for p in skirt.perimeters:
+    x, y = p.xy
+    e = extrude(x, y, flow)
+    layers.append(gen_layer(x, y, 0.2, e))
+
 for i in range(16):
-    for j in range(len(path_c)):
-        x, y = path_c[j].xy
+    for p in a.perimeters:
+        x, y = p.xy
         e = extrude(x, y, flow)
-        layers.append(gen_layer(x, y, 0.2 * ((2*i)+1), e))
-    for j in range(len(path_c2)):
-        x, y = path_c2[j].xy
+        layers.append(gen_layer(x, y, 0.2 * (2*i+1), e))
+    x, y = a.inner_shape.xy
+    e = extrude(x, y, flow)
+    layers.append(gen_layer(x, y, 0.2 * (2*i+1), e))
+
+    for p in b.perimeters:
+        x, y = p.xy
         e = extrude(x, y, flow)
-        layers.append(gen_layer(x, y, 0.2 * ((2*i)+2), e))
+        layers.append(gen_layer(x, y, 0.2 * (2*i+2), e))
+    x, y = b.inner_shape.xy
+    e = extrude(x, y, flow)
+    layers.append(gen_layer(x, y, 0.2 * (2*i+2), e))
 
 
 
 output_gcode(layers, output_name, date, header, footer)
 
-fig = plt.figure(1, figsize=SIZE, dpi=90)
-
-ax = fig.add_subplot(111)
-
-for l in path_c:
-    x, y = l.xy
-    ax.plot(x,y)
-ax.grid(True)
-ax.set_title('A')
-plt.axis('equal')
-
-
-plt.show()
+plot_layer(b)

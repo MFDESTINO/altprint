@@ -90,22 +90,24 @@ def contour(shape, L):
 
 def gen_square(borders_coords, gap, raster_ang):
     borders = LinearRing(borders_coords)
+    origin = borders_coords[0]
     borders = affinity.rotate(borders, raster_ang)
-    borders=affinity.translate(borders, borders.bounds[0] * -1,  borders.bounds[1] * -1)
+    dif = [borders.bounds[0], borders.bounds[1]]
+    borders=affinity.translate(borders, -dif[0],  -dif[1])
     prelines = gen_lines(int(borders.bounds[2] / gap), borders.bounds[3], gap)
     intersection = prelines.intersection(borders)
     intersection = refine(intersection)
     lines = connect(intersection)
     path = union_path(lines)
     path = linemerge(path)
-    path = affinity.rotate(path, raster_ang * -1)
-    path = affinity.translate(path, path.bounds[0] * -1, path.bounds[1] * -1)
-
+    path = affinity.rotate(path, - raster_ang, origin=borders.coords[0])
+    borders = affinity.rotate(borders, - raster_ang, origin=borders.coords[0])
+    path = affinity.translate(path,  - borders.bounds[0] + origin[0],  - borders.bounds[1] + origin[1])
+    borders = affinity.translate(borders,  - borders.bounds[0] + origin[0],  - borders.bounds[1] + origin[1])
     return path
 
 def centralize(path, bed_x, bed_y):
-    path = affinity.translate(path, path.bounds[0] * -1,  path.bounds[1] * -1)
-    dx = bed_x / 2 - path.bounds[2] / 2
-    dy = bed_y / 2 - path.bounds[3] / 2
-    path = affinity.translate(path, dx, dy)
+    dx = path.bounds[2] - path.bounds[0]
+    dy = path.bounds[3] - path.bounds[1]
+    path = affinity.translate(path, (bed_x - dx)/2, (bed_y - dy)/2)
     return path
