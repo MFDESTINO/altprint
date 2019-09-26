@@ -1,0 +1,14 @@
+Prynter v{}
+https://github.com/couto0/prynter.git
+3d printing path generator
+
+Output file: {}.gcode
+
+raster settings:
+  gap: {} mm
+  width: {} mm
+  height: {} mm
+
+printer settings:
+  filament diameter: {} mm
+  bed size: {} mm x {} mm

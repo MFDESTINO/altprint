@@ -5,20 +5,16 @@
  / .___/_/   \__, /_/ /_/\__/\___/_/
 /_/         /____/
 
-
+v{}
 https://github.com/couto0/prynter.git
 
    3d printing path generator
 
-   Square path
-   Length: {} mm
-   Gap: {} mm
-   Raster width: {} mm
-   Raster height: {} mm
-   Angle 0: {}°
-   Angle 1: {}°
-   Filament diameter: {} mm
-   Adjust: {} %
-   Flow multiplier: {:.5} mm
-   Bed size: {} mm x {} mm
-   Output file: {}.gcode
+   raster settings:
+     gap: {} mm
+     width: {} mm
+     height: {} mm
+
+   printer settings:
+     filament diameter: {} mm
+     bed size: {} mm x {} mm

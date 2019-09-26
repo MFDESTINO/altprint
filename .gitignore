@@ -1,4 +1,3 @@
-*.gcode
-*.txt
 *.pyc
 asd.py
+output/*

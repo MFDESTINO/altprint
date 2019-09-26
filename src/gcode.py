@@ -27,7 +27,7 @@ def output_gcode(layers, output_name, date, header, footer):
     footer: rodapé do arquivo de saída
 
     """
-    with open('output/' + date + '/' + output_name + '.gcode', 'w') as f:
+    with open(output_name + '.gcode', 'w') as f:
         f.write(header)
         for layer in layers:
             f.write(layer)

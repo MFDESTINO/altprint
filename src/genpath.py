@@ -105,9 +105,3 @@ def gen_square(borders_coords, gap, raster_ang):
     path = affinity.translate(path,  - borders.bounds[0] + origin[0],  - borders.bounds[1] + origin[1])
     borders = affinity.translate(borders,  - borders.bounds[0] + origin[0],  - borders.bounds[1] + origin[1])
     return path
-
-def centralize(path, bed_x, bed_y):
-    dx = path.bounds[2] - path.bounds[0]
-    dy = path.bounds[3] - path.bounds[1]
-    path = affinity.translate(path, (bed_x - dx)/2, (bed_y - dy)/2)
-    return path
