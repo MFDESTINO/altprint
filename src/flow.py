@@ -2,7 +2,7 @@ import numpy as np
 
 def flow_math(w, h, df, adjust):
     """
-    Calcula o fator multiplicador de fluxo de filamento, usandfo o modelo
+    Calcula o fator multiplicador de fluxo de filamento, usando o modelo
     do retângulo com bordas circulares.
 
     Args:

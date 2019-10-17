@@ -5,7 +5,7 @@ from src.plotpath import plot_layer
 import src.layer as layer
 import src.initconfig as cfg
 from shapely import affinity
-
+from itertools import cycle
 
 flow = flow_math(cfg.width, cfg.height, cfg.filament_diameter, 1)
 
@@ -29,18 +29,21 @@ for i in range(16):
         x, y = p.xy
         e = extrude(x, y, flow)
         layers.append(gen_layer(x, y, cfg.height * (2*i+1), e))
-    x, y = a.inner_shape.xy
-    e = extrude(x, y, flow)
-    layers.append(gen_layer(x, y, cfg.height * (2*i+1), e))
+
+    for p in a.inner_shape:
+        x, y = p.xy
+        e = extrude(x, y, flow)
+        layers.append(gen_layer(x, y, cfg.height * (2*i+1), e))
 
     for p in b.perimeters:
         x, y = p.xy
         e = extrude(x, y, flow)
         layers.append(gen_layer(x, y, cfg.height * (2*i+2), e))
-    x, y = b.inner_shape.xy
-    e = extrude(x, y, flow)
-    layers.append(gen_layer(x, y, cfg.height * (2*i+2), e))
+    for p in b.inner_shape:
+        x, y = p.xy
+        e = extrude(x, y, flow)
+        layers.append(gen_layer(x, y, cfg.height * (2*i+2), e))
 
-output_gcode(layers, cfg.output_f, cfg.date, cfg.header, cfg.footer)
+output_gcode(layers, cfg.output_f, cfg.header, cfg.footer)
 
 plot_layer(b)

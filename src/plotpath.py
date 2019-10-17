@@ -17,8 +17,9 @@ def plot_layer(layer):
     for p in layer.perimeters:
         x, y = p.xy
         ax.plot(x,y, linewidth=2)
-    x, y = layer.inner_shape.xy
-    ax.plot(x,y, linewidth=2)
+    for p in layer.inner_shape:
+        x, y = p.xy
+        ax.plot(x,y, linewidth=2)
     ax.grid(True)
     plt.axis('equal')
     plt.show()
