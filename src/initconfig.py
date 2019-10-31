@@ -37,7 +37,7 @@ filament_diameter = float(config['DEFAULT']['filament_diameter'])
 bed_x = float(config['DEFAULT']['bed_x'])
 bed_y = float(config['DEFAULT']['bed_y'])
 bed = [bed_x, bed_y]
-
+vel = float(config['DEFAULT']['vel'])
 
 print(splash.format(version, gap, width, height, filament_diameter, bed_x, bed_y))
 f_name = input("filename: ")
@@ -46,4 +46,4 @@ output_f = os.path.join(dir, date + '-' + f_name)
 print(output_f)
 
 with open(output_f + '-config.txt', 'w') as f:
-    f.write(cfgtxt.format(version, date + '-' + f_name, gap, width, height, filament_diameter, bed_x, bed_y))
+    f.write(cfgtxt.format(version, date + '-' + f_name, gap, width, height, vel, filament_diameter, bed_x, bed_y))

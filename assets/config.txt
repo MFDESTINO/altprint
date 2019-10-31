@@ -8,6 +8,7 @@ raster settings:
   gap: {} mm
   width: {} mm
   height: {} mm
+  vel: {}
 
 printer settings:
   filament diameter: {} mm
