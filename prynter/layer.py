@@ -1,4 +1,4 @@
-from src.genpath import gen_square, contour
+from prynter.genpath import gen_square, contour
 from shapely.geometry import LineString, LinearRing, MultiLineString, Point, MultiPoint, Polygon
 from shapely import affinity
 

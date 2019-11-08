@@ -1,15 +1,15 @@
 import numpy as np
 
-def flow_math(w, h, df, adjust):
+def calculate(w = 0.48, h = 0.2, df = 1.75, adjust = 1):
     """
     Calcula o fator multiplicador de fluxo de filamento, usando o modelo
     do retângulo com bordas circulares.
 
     Args:
-    w: comprimento do raster
-    h: altura do raster
-    df: diametro do filamento
-    adjust: fator de calibração
+    w: comprimento do raster (default 0.48mm)
+    h: altura do raster (default 0.2mm)
+    df: diametro do filamento (default 1.75mm)
+    adjust: fator de calibração (default 100%)
 
     Returns:
     flow: fator multiplicador do fluxo
