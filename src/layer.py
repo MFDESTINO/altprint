@@ -3,7 +3,7 @@ from shapely.geometry import LineString, LinearRing, MultiLineString, Point, Mul
 from shapely import affinity
 
 class Layer:
-    def __init__(self, shape, out_adj, perimeters_num, gap, bed, angle):
+    def __init__(self, shape, out_adj, perimeters_num, gap, angle):
         self.perimeters = []
         self.inner_shape = []
         self.shape = contour(shape, out_adj)
@@ -19,8 +19,12 @@ class Layer:
 
         self.inner_shape = MultiLineString(self.inner_shape)
         self.perimeters = MultiLineString(self.perimeters)
-        self.bounds = [self.perimeters.bounds[2] - self.perimeters.bounds[0],
-                       self.perimeters.bounds[3] - self.perimeters.bounds[1]]
+        if perimeters_num == 0:
+            self.bounds = [self.inner_shape.bounds[2] - self.inner_shape.bounds[0],
+                           self.inner_shape.bounds[3] - self.inner_shape.bounds[1]]
+        else:
+            self.bounds = [self.perimeters.bounds[2] - self.perimeters.bounds[0],
+                           self.perimeters.bounds[3] - self.perimeters.bounds[1]]
 
     def translate(self, dx, dy):
         self.inner_shape = affinity.translate(self.inner_shape, dx, dy)

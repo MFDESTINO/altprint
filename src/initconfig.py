@@ -21,11 +21,11 @@ footer = "".join(footer)
 with open('assets/splash.txt', 'r') as f:
     splash = f.readlines()
 splash = "".join(splash)
-
+'''
 with open('assets/config.txt', 'r') as f:
     cfgtxt = f.readlines()
 cfgtxt = "".join(cfgtxt)
-
+'''
 
 config = configparser.ConfigParser()
 config.read('config.ini')
@@ -44,6 +44,7 @@ f_name = input("filename: ")
 
 output_f = os.path.join(dir, date + '-' + f_name)
 print(output_f)
-
+'''
 with open(output_f + '-config.txt', 'w') as f:
     f.write(cfgtxt.format(version, date + '-' + f_name, gap, width, height, vel, filament_diameter, bed_x, bed_y))
+'''

@@ -2,8 +2,8 @@ from shapely.figures import SIZE, set_limits, plot_line, plot_bounds, color_issi
 from shapely.figures import plot_coords as _plot_coords
 import matplotlib.pyplot as plt
 
-#fig = plt.figure(1, figsize=SIZE, dpi=90)
-#ax = fig.add_subplot(111)
+fig = plt.figure(1, figsize=SIZE, dpi=90)
+ax = fig.add_subplot(111)
 
 def plot_coords(ax, ob, color='gray'):
     for line in ob:
