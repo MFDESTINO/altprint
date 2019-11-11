@@ -1,4 +1,4 @@
-_refinefrom shapely.geometry import LineString, LinearRing, MultiLineString, Point, MultiPoint
+from shapely.geometry import LineString, LinearRing, MultiLineString, Point, MultiPoint
 from shapely.ops import linemerge
 from shapely import affinity
 from collections import deque
