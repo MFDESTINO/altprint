@@ -17,13 +17,17 @@ L = 15
 object_shape = [(0,0), (40 + L,0), (40 + L, 15), (0, 15)]
 alt_zone = LineString([(20, 0), (20 + L, 0), (20 + L, 15), (20, 15), (20, 0)])
 
-skirt = layer.Layer(object_shape, 5, 4, 0.5, 0)
-a = layer.Layer(object_shape, -0.48/2, 0, 0.5, 90)
-a2 = layer.Layer(object_shape, -0.48/2, 0, 0.5, 0)
-alt_zone = affinity.translate(alt_zone, (cfg.bed[0] - a.bounds[0])/2, (cfg.bed[1] - a.bounds[1])/2)
-skirt.translate((cfg.bed[0] - a.bounds[0])/2, (cfg.bed[1] - a.bounds[1])/2)
-a2.translate((cfg.bed[0] - a.bounds[0])/2, (cfg.bed[1] - a.bounds[1])/2)
-a.translate((cfg.bed[0] - a.bounds[0])/2, (cfg.bed[1] - a.bounds[1])/2)
+skirt = layer.Layer(object_shape, 4, out_adj=5)
+a = layer.Layer(object_shape, 0, angle=90)
+a2 = layer.Layer(object_shape, 0)
+
+center_x = (cfg.bed[0] - a.bounds[0])/2
+center_y = (cfg.bed[1] - a.bounds[1])/2
+
+alt_zone = affinity.translate(alt_zone, center_x, center_y)
+skirt.translate(center_x, center_y)
+a2.translate(center_x, center_y)
+a.translate(center_x, center_y)
 alt_zonep = Polygon(alt_zone)
 
 a.inner_shape = split(a.inner_shape, alt_zone)

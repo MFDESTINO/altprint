@@ -3,7 +3,7 @@ from shapely.geometry import LineString, LinearRing, MultiLineString, Point, Mul
 from shapely import affinity
 
 class Layer:
-    def __init__(self, shape, out_adj, perimeters_num, gap, angle):
+    def __init__(self, shape, perimeters_num, out_adj=-0.48/2, gap=0.5, angle=0):
         self.perimeters = []
         self.inner_shape = []
         self.shape = contour(shape, out_adj)
