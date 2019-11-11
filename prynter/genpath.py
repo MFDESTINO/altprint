@@ -1,17 +1,17 @@
-from shapely.geometry import LineString, LinearRing, MultiLineString, Point, MultiPoint
+_refinefrom shapely.geometry import LineString, LinearRing, MultiLineString, Point, MultiPoint
 from shapely.ops import linemerge
 from shapely import affinity
 from collections import deque
 import numpy as np
 
-def gen_lines(mx, my, gap):
+def _gen_lines(mx, my, gap):
     lines = []
     for i in range(mx + 1):
         lines.append(LineString([[i*gap,0], [i*gap,my]]))
     multi_line = MultiLineString(lines)
     return multi_line
 
-def connect(points):
+def _connect(points):
     n = len(points)
     lines = []
     for i in range(int(n / 2)):
@@ -20,7 +20,7 @@ def connect(points):
     multi_line = MultiLineString(lines)
     return multi_line
 
-def refine(collection):
+def _refine(collection):
     refined = []
     for geom in collection:
         if type(geom) != Point:
@@ -34,7 +34,7 @@ def refine(collection):
     return multi_point
 
 
-def union_path(lines):
+def _union_path(lines):
     n = len(lines) - 1
     path = []
     for i in range(n):
@@ -106,11 +106,11 @@ def gen_square(borders_coords, gap, raster_ang):
     borders = affinity.rotate(borders, raster_ang)
     dif = [borders.bounds[0], borders.bounds[1]]
     borders=affinity.translate(borders, -dif[0],  -dif[1])
-    prelines = gen_lines(int(borders.bounds[2] / gap), borders.bounds[3], gap)
+    prelines = _gen_lines(int(borders.bounds[2] / gap), borders.bounds[3], gap)
     intersection = prelines.intersection(borders)
-    intersection = refine(intersection)
-    lines = connect(intersection)
-    path = union_path(lines)
+    intersection = _refine(intersection)
+    lines = _connect(intersection)
+    path = _union_path(lines)
     path = linemerge(path)
     path = affinity.rotate(path, - raster_ang, origin=borders.coords[0])
     borders = affinity.rotate(borders, - raster_ang, origin=borders.coords[0])
