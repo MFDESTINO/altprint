@@ -45,20 +45,13 @@ for i in range(3):
         x, y = line.xy
         if line.within(alt_zonep):
             #e = extrude(x, y, flow*0)
-            f = 0.9
-            A = [x[0], y[0]]
-            B = [x[1], y[1]]
-            C = [A[0] + f*(B[0]-A[0]), A[1] + f*(B[1]-A[1])]
-            acx = [A[0], C[0]]
-            acy = [A[1], C[1]]
-            cbx = [C[0], B[0]]
-            cby = [C[1], B[1]]
-            e1 = flow.extrude(acx, acy, flow_val*0)
-            e2 = flow.extrude(cbx, cby, flow_val*2)
-            ax.plot(acx, acy, linewidth=3, color='blue')
-            ax.plot(cbx, cby, linewidth=5, color='red')
-            layers.append(gcode.gen_layer2(acx, acy, 0.2 * (i+1), e1, 3000))
-            layers.append(gcode.gen_layer2(cbx, cby, 0.2 * (i+1), e2, 3000))
+            bridge, rec = genpath.retract(x, y, 0.9)
+            e1 = flow.extrude(bridge[0], bridge[1], flow_val*0)
+            e2 = flow.extrude(rec[0], rec[1], flow_val*2)
+            ax.plot(bridge[0], bridge[1], linewidth=3, color='blue')
+            ax.plot(rec[0], rec[1], linewidth=5, color='red')
+            layers.append(gcode.gen_layer2(bridge[0], bridge[1], 0.2 * (i+1), e1, 3000))
+            layers.append(gcode.gen_layer2(rec[0], rec[1], 0.2 * (i+1), e2, 3000))
         else:
             e = flow.extrude(x, y, flow_val*1.2)
             ax.plot(x,y, linewidth=5, color='gray')

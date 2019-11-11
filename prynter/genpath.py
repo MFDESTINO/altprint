@@ -88,6 +88,18 @@ def contour(shape, L):
     shape_border.rotate(-1)
     return list(shape_border)
 
+def retract(x, y, f):
+    A = [x[0], y[0]]
+    B = [x[1], y[1]]
+    C = [A[0] + f*(B[0]-A[0]), A[1] + f*(B[1]-A[1])]
+    acx = [A[0], C[0]]
+    acy = [A[1], C[1]]
+    cbx = [C[0], B[0]]
+    cby = [C[1], B[1]]
+    AC = [acx, acy]
+    CB = [cbx, cby]
+    return AC, CB
+
 def gen_square(borders_coords, gap, raster_ang):
     borders = LinearRing(borders_coords)
     origin = borders_coords[0]
