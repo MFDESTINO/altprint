@@ -2,17 +2,16 @@ import re
 
 def gen_layer(x, y, z, e, v):
     """
-    Transforma em gcode as coordenadas correspondentes a uma camada
+    Turn coordinates into gcode
+    ARGS:
+    x: x array (array)
+    y: y array (array)
+    z: height (float)
+    e: extrusion array (array)
+    v: speed (float)
 
-    Args:
-    x: vetor com as componentes x dos pontos
-    y: vetor com as componentes y dos pontos
-    z: altura z da camada
-    e: vetor com as coordenadas de extrusao
-    v: velocidade de movimentacao
-
-    Returns:
-    layer: string contendo o gcode correspondente a uma camada
+    RETURNS:
+    Gcode string (str)
     """
     layer = []
     layer.append('G1 Z{0:.3f} F{1:.3f}\n'.format(z, v))
@@ -30,6 +29,18 @@ def gen_layer(x, y, z, e, v):
     return layer
 
 def gen_layer2(x, y, z, e, v):
+    """
+    Turn coordinates into gcode
+    ARGS:
+    x: x array (array)
+    y: y array (array)
+    z: height (float)
+    e: extrusion array (array)
+    v: speed (float)
+
+    RETURNS:
+    Gcode string (str)
+    """
     layer = []
     layer.append('G92 E0.0000\n')
     layer.append('M106 S255\n')
@@ -42,13 +53,13 @@ def gen_layer2(x, y, z, e, v):
 
 def output_gcode(layers, output_name, header, footer):
     """
-    Gera o arquivo gcode final.
+    Generates the final gcode file
 
-    Args:
-    layers: lista contendo todas as camadas a serem impressas
-    output_name: nome do arquivo de saída
-    header: cabeçalho gcode do arquivo de saída
-    footer: rodapé gcode do arquivo de saída
+    ARGS:
+    layers: list containing all layers (str)
+    output_name: output file name (str)
+    header: gcode file header (str)
+    footer: gcode file footer (str)
 
     """
     with open(output_name + '.gcode', 'w') as f:
@@ -68,6 +79,15 @@ E = re.compile("E(\d+\.?\d*)", re.IGNORECASE)
 
 
 def parse_gcode(filename):
+    """
+    Turns a gcode file into a gcode object, containing the coordinate arrays
+
+    ARGS:
+    filename: gcode filename (str)
+
+    RETURNS:
+    Tuple containing the arrays, and the original gcode string
+    """
     with open(filename, 'r') as f:
         gcode = f.readlines()
 

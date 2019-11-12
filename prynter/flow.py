@@ -2,17 +2,16 @@ import numpy as np
 
 def calculate(w = 0.48, h = 0.2, df = 1.75, adjust = 1):
     """
-    Calcula o fator multiplicador de fluxo de filamento, usando o modelo
-    do retângulo com bordas circulares.
+    Calculates the flow multiplier factor, using the rounded rectangle model.
 
-    Args:
-    w: comprimento do raster (default 0.48mm)
-    h: altura do raster (default 0.2mm)
-    df: diametro do filamento (default 1.75mm)
-    adjust: fator de calibração (default 100%)
+    ARGS:
+    w: raster width (default 0.48mm) (float)
+    h: raster height (default 0.2mm) (float)
+    df: filament diameter (default 1.75mm) (float)
+    adjust: adjust factor (default 100%) (float)
 
-    Returns:
-    flow: fator multiplicador do fluxo
+    RETURNS:
+    Flow multiplier factor
     """
     a = 4 * w * h + (np.pi - 4) * h**2
     b = np.pi * df**2
@@ -22,15 +21,14 @@ def calculate(w = 0.48, h = 0.2, df = 1.75, adjust = 1):
 
 def extrude(x, y, flow):
     """
-    Gera o vetor com as coordenadas da extrusão do filamento.
+    Generates the extrusion coordinate array.
 
-    Args:
-    x: vetor com as componentes x dos pontos
-    y: vetor com as componentes y dos pontos
-    flow: fator multiplicador do fluxo
-
-    Returns:
-    extrusion: vetor com as coordenadas da extrusão do filamento.
+    ARGS:
+    x: x array (array)
+    y: y array (array)
+    flow: flow multiplier (float)
+    RETURNS:
+    Extrusion coordinate array (array)
     """
     extrusion = np.zeros(len(x))
     for i in range(1, len(x)):

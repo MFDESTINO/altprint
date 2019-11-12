@@ -5,22 +5,35 @@ from collections import deque
 import numpy as np
 
 def _gen_lines(mx, my, gap):
+    """
+    (internal)
+    Generate parallel lines
+
+    ARGS:
+    mx: parallel lines number (int)
+    my: parallel lines height (float)
+    gap: distance between lines (float)
+
+    RETURNS:
+    MultiLineString containing the parallel lines. (MultLineString)
+    """
     lines = []
     for i in range(mx + 1):
         lines.append(LineString([[i*gap,0], [i*gap,my]]))
     multi_line = MultiLineString(lines)
     return multi_line
 
-def _connect(points):
-    n = len(points)
-    lines = []
-    for i in range(int(n / 2)):
-        lines.append(LineString([points[2 * i], points[2 * i + 1]]))
-    lines = sorted(lines, key=lambda line: line.coords[0][0])
-    multi_line = MultiLineString(lines)
-    return multi_line
-
 def _refine(collection):
+    """
+    (internal)
+    Remove double points and turn lines into a pair of points.
+
+    ARGS:
+    collection: GeometryCollection containg all lines and points of the path
+
+    RETURNS:
+    MultiPoint containg the refined points.
+    """
     refined = []
     for geom in collection:
         if type(geom) != Point:
@@ -33,8 +46,36 @@ def _refine(collection):
     multi_point = MultiPoint(refined)
     return multi_point
 
+def _connect(points):
+    """
+    (internal)
+    Connect the points of parallel lines, creating an continuous path
+
+    ARGS:
+    points: MultiPoint containing all points to be connected (MultiPoint)
+
+    RETURNS:
+    MultiLineString containing the path (MultiLineString)
+    """
+    n = len(points)
+    lines = []
+    for i in range(int(n / 2)):
+        lines.append(LineString([points[2 * i], points[2 * i + 1]]))
+    lines = sorted(lines, key=lambda line: line.coords[0][0])
+    multi_line = MultiLineString(lines)
+    return multi_line
 
 def _union_path(lines):
+    """
+    (internal)
+    Turn an unconnected MultiLineString into a continuous path
+
+    ARGS:
+    lines: MultiLineString containg the unconnected path (MultiLineString)
+
+    RETURNS:
+    MultiLineString containing the continuous path (MultiLineString)
+    """
     n = len(lines) - 1
     path = []
     for i in range(n):
@@ -49,6 +90,17 @@ def _union_path(lines):
     return multi_line
 
 def contour(shape, L):
+    """
+    Generate a contour line from L milimeters of the shape object.
+
+    ARGS:
+    shape: MultiLineString of the shape (MultiLineString)
+    L: distance of the contour from shape. Positive numbers means external
+    contours, negative numbers means internal contours (float)
+
+    RETURNS:
+    list containing the contour segments. (list)
+    """
     shape_border = []
     for i in range(len(shape)):
         A = shape[i-2]
@@ -89,6 +141,18 @@ def contour(shape, L):
     return list(shape_border)
 
 def retract(x, y, f):
+    """
+    Splits an AB segment from a C point, between A and B. Used for creating
+    an recovery zone on variable flow bridges.
+
+    ARGS:
+    x: list contaning x points from the segment (list)
+    y: list contaning y points from the segment (list)
+    f: factor that determines where the segment will be splited. (float)
+
+    RETURNS:
+    Tuple containg the two new segments. (tuple)
+    """
     A = [x[0], y[0]]
     B = [x[1], y[1]]
     C = [A[0] + f*(B[0]-A[0]), A[1] + f*(B[1]-A[1])]
@@ -101,6 +165,17 @@ def retract(x, y, f):
     return AC, CB
 
 def gen_square(borders_coords, gap, raster_ang):
+    """
+    Generates an infill path, rectilinear, within the specified shape
+
+    ARGS:
+    borders_coords: List containing point tuples of the shape (list)
+    gap: Gap between segments (float)
+    raster_ang: Angle of the infill segments in degrees. (float)
+
+    RETURNS:
+    path: Infill path. (LineString)
+    """
     borders = LinearRing(borders_coords)
     origin = borders_coords[0]
     borders = affinity.rotate(borders, raster_ang)
@@ -116,4 +191,5 @@ def gen_square(borders_coords, gap, raster_ang):
     borders = affinity.rotate(borders, - raster_ang, origin=borders.coords[0])
     path = affinity.translate(path,  - borders.bounds[0] + origin[0],  - borders.bounds[1] + origin[1])
     borders = affinity.translate(borders,  - borders.bounds[0] + origin[0],  - borders.bounds[1] + origin[1])
+    print(type(path))
     return path
