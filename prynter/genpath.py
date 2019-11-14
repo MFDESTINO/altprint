@@ -191,5 +191,4 @@ def gen_square(borders_coords, gap, raster_ang):
     borders = affinity.rotate(borders, - raster_ang, origin=borders.coords[0])
     path = affinity.translate(path,  - borders.bounds[0] + origin[0],  - borders.bounds[1] + origin[1])
     borders = affinity.translate(borders,  - borders.bounds[0] + origin[0],  - borders.bounds[1] + origin[1])
-    print(type(path))
     return path
