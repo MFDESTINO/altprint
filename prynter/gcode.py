@@ -51,6 +51,13 @@ def gen_layer2(x, y, z, e, v):
     layer = "".join(layer)
     return layer
 
+def read_script(fname):
+    script = ""
+    with open(fname, 'r') as f:
+        script = f.readlines()
+        script = ''.join(script)
+    return script
+
 def output_gcode(layers, output_name, header, footer):
     """
     Generates the final gcode file
