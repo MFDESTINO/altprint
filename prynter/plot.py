@@ -1,3 +1,4 @@
+from shapely.geometry import LineString, MultiLineString, GeometryCollection
 
 
 def plot_layer(ax, layer):
@@ -6,7 +7,7 @@ def plot_layer(ax, layer):
 
     for perimeter in layer.perimeters:
         x, y = perimeter.xy
-        ax.plot(x, y, color="green")
+        ax.plot(x, y, linewidth=3, color="green")
 
     for infill in layer.infill:
         x, y = infill.xy
