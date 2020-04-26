@@ -1,20 +1,21 @@
 #!/usr/bin/env python3
 
 import matplotlib.pyplot as plt
-from shapely.geometry import LineString
+from shapely.geometry import LineString, Polygon
+from shapely.affinity import translate
 from prynter.core import Layer
-from prynter.path.rectilinear_fill import rectilinear_fill
+from prynter.path.rectilinear_fill_v2 import rectilinear_fill
 from prynter.plot import plot_layer
 from prynter.flow import calculate, extrude
 from prynter.gcode import gen_layer2, output_gcode, read_script
 
+object_border = LineString([(0,0), (5, 0), (10, 5), (15, 5), (15, 0), (20,0), (20,18), (15,20), (10,10), (5, 10), (5, 20), (0, 20),(0,0)])
+object_border = translate(object_border, 100, 100)
+
+layer_0 = Layer(border=object_border, perimeters_num=2)
+layer_0.infill = rectilinear_fill(Polygon(layer_0.inner_border), 0.5)
+
 flow_val = calculate()
-
-
-object_border = LineString([(0,0), (10,0), (10,10), (5, 10), (0, 0)])
-layer_0 = Layer(border=object_border, perimeters_num=3)
-layer_0.infill = rectilinear_fill(layer_0.inner_border, 45)
-layer_0.translate(100, 100)
 
 layers = []
 for i in range(10):
