@@ -137,9 +137,15 @@ def rectilinear_fill(shape, gap):
             final_fill.append(line)
 
     for i, line in enumerate(final_fill):
-        final_line = LineString([line.coords[-2], line.coords[-1]])
+        if len(line.coords) > 1:
+            final_line = LineString([line.coords[-2], line.coords[-1]])
+        else:
+            final_line = LineString()
         for j, line2 in enumerate(final_fill):
-            first_line = LineString([line2.coords[0], line2.coords[1]])
+            if len(line2.coords) > 1:
+                first_line = LineString([line2.coords[0], line2.coords[1]])
+            else:
+                first_line = LineString()
             if final_line.within(first_line):
                 final_fill[i] = final_fill[i].difference(final_fill[j])
             if first_line.within(final_line):
@@ -151,7 +157,7 @@ if __name__ == "__main__":
     ax = plt.subplot()
 
     shape_border = [(0,0), (5, 0), (10, 5), (15, 5), (15, 0), (20,0), (20,18), (15,20), (10,10), (5, 10), (5, 20), (0, 20),(0,0)]
-    
+
     shape = Polygon(shape_border)
 
     gap = 0.5

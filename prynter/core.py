@@ -11,7 +11,9 @@ class Layer:
             "gap": 0.5,
             "perimeters_num": 2,
             "perimeters": [],
-            "infill": []
+            "infill": [],
+            "skirt_num": [3, 5],
+            "skirt": [],
         }
 
         for (prop, default) in prop_defaults.items():
@@ -19,6 +21,9 @@ class Layer:
 
         for i in range(self.perimeters_num):
             self.perimeters.append(contour(self.border, - self.gap * i))
+
+        for i in range(self.skirt_num[0]):
+            self.skirt.append(contour(self.border, self.skirt_num[1] - self.gap * i))
 
         self.inner_border = contour(self.border,
                                     - self.gap * self.perimeters_num)
