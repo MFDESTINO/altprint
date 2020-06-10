@@ -1,118 +1,157 @@
-from shapely.geometry import LineString, MultiLineString, Point, MultiPoint
+import matplotlib.pyplot as plt
+from shapely.geometry import LineString, GeometryCollection, Polygon, MultiPoint, MultiLineString, Point
+from shapely.affinity import translate
+from shapely.ops import split
 from shapely.ops import linemerge
-from shapely import affinity
-from collections import deque
-import numpy as np
 
-def _gen_lines(mx, my, gap):
-    """
-    (internal)
-    Generate parallel lines
 
-    ARGS:
-    mx: parallel lines number (int)
-    my: parallel lines height (float)
-    gap: distance between lines (float)
+def get_bounds(shape):
+    minx = shape.bounds[0]
+    miny = shape.bounds[1]
+    maxx = shape.bounds[2]
+    maxy = shape.bounds[3]
+    return minx, miny, maxx, maxy
 
-    RETURNS:
-    MultiLineString containing the parallel lines. (MultLineString)
-    """
+
+def get_point_heights(shape):
+    y = []
+    for coord in shape.coords:
+        y.append(coord[1])
+    y = list(set(y))  # remove doubles
+    y.sort()
+    return y
+
+
+def add_mid_points(points):
+    res = []
+    for i in range(len(points)-1):
+        res.append(points[i])
+        res.append((points[i+1]+points[i])/2)
+    return res
+
+
+def get_lines_at_heights(heights, minx, maxx):
     lines = []
-    for i in range(mx + 1):
-        lines.append(LineString([[i*gap,0], [i*gap,my]]))
-    multi_line = MultiLineString(lines)
-    return multi_line
+    for y in heights:
+        lines.append(LineString([(minx, y), (maxx, y)]))
+    return lines
 
-def _refine(collection):
-    """
-    (internal)
-    Remove double points and turn lines into a pair of points.
 
-    ARGS:
-    collection: GeometryCollection containg all lines and points of the path
+def get_intersections(shape, horizontal_lines):
+    intersections = []
+    for line in horizontal_lines:
+        intersection = shape.intersection(line)
+        intersections.append(intersection)
+    return intersections
 
-    RETURNS:
-    MultiPoint containg the refined points.
-    """
-    refined = []
-    for geom in collection:
-        if type(geom) != Point:
-            refined.append(Point(geom.coords[0]))
-            refined.append(Point(geom.coords[-1]))
-        else:
-            refined.append(geom)
-    if refined[0].coords[0][0] != refined[1].coords[0][0]:
-        refined.pop(0)
-    multi_point = MultiPoint(refined)
-    return multi_point
 
-def _connect(points):
-    """
-    (internal)
-    Connect the points of parallel lines, creating an continuous path
+def remove_overlaps(fill_segments):
+    for i, line in enumerate(fill_segments):
+        final_line = LineString(line.coords[-2:])
+        for j, line2 in enumerate(fill_segments):
+            first_line = LineString(line2.coords[:2])
+            if final_line.within(first_line):
+                fill_segments[i] = LineString(line.coords[:-2])
+            elif first_line.within(final_line):
+                fill_segments[j] = LineString(line2.coords[2:])
+    return fill_segments
 
-    ARGS:
-    points: MultiPoint containing all points to be connected (MultiPoint)
 
-    RETURNS:
-    MultiLineString containing the path (MultiLineString)
-    """
-    n = len(points)
-    lines = []
-    for i in range(int(n / 2)):
-        lines.append(LineString([points[2 * i], points[2 * i + 1]]))
-    lines = sorted(lines, key=lambda line: line.coords[0][0])
-    multi_line = MultiLineString(lines)
-    return multi_line
+def fill_shape(border, gap, horizontal_lines):
+    x0 = []
+    x1 = []
+    y0 = []
+    y1 = []
+    for line in horizontal_lines:
+        inter = line.intersection(border)
+        if inter.bounds:
+            minx, miny, maxx, maxy = get_bounds(inter)
+            x0.append(minx)
+            y0.append(miny)
+            x1.append(maxx)
+            y1.append(maxy)
 
-def _union_path(lines):
-    """
-    (internal)
-    Turn an unconnected MultiLineString into a continuous path
-
-    ARGS:
-    lines: MultiLineString containg the unconnected path (MultiLineString)
-
-    RETURNS:
-    MultiLineString containing the continuous path (MultiLineString)
-    """
-    n = len(lines) - 1
-    path = []
-    for i in range(n):
+    fill = []
+    for i in range(len(x0)-1):
+        fill.append(LineString([(x0[i], y0[i]), (x1[i], y1[i])]))
         if i % 2:
-            path.append(lines[i])
-            path.append(LineString([lines[i].coords[0], lines[i+1].coords[0]]))
+            line = LineString([(x0[i], y0[i]), (x0[i+1], y0[i+1])])
         else:
-            path.append(lines[i])
-            path.append(LineString([lines[i].coords[-1], lines[i+1].coords[-1]]))
-    path.append(lines[-1])
-    multi_line = MultiLineString(path)
-    return multi_line
+            line = LineString([(x1[i], y1[i]), (x1[i+1], y1[i+1])])
+        fill.append(line)
 
-def rectilinear_fill(borders, angle, gap=0.5):
-    """
-    Generates an infill path, rectilinear, within the specified shape
+    fill.append(LineString([(x0[-1], y0[-1]), (x1[-1], y1[-1])]))
+    fill = linemerge(fill)
+    return fill
 
-    ARGS:
-    borders_coords: List containing point tuples of the shape (list)
-    gap: Gap between segments (float)
-    angle: Angle of the infill segments in degrees. (float)
 
-    RETURNS:
-    path: Infill path. (LineString)
-    """
-    origin = borders.coords[0]
-    borders = affinity.rotate(borders, angle)
-    dif = [borders.bounds[0], borders.bounds[1]]
-    borders=affinity.translate(borders, -dif[0],  -dif[1])
-    prelines = _gen_lines(int(borders.bounds[2] / gap), borders.bounds[3], gap)
-    intersection = prelines.intersection(borders)
-    intersection = _refine(intersection)
-    lines = _connect(intersection)
-    path = _union_path(lines)
-    path = linemerge(path)
-    path = affinity.rotate(path, - angle, origin=borders.coords[0])
-    borders = affinity.rotate(borders, - angle, origin=borders.coords[0])
-    path = affinity.translate(path,  - borders.bounds[0] + origin[0],  - borders.bounds[1] + origin[1])
-    borders = affinity.translate(borders,  - borders.bounds[0] + origin[0],  - borders.bounds[1] + origin[1])
-    return [path]
+def slice_shape(shape, gap):
+    minx, miny, maxx, maxy = get_bounds(shape)
+    heights = get_point_heights(shape.exterior)
+    heights = add_mid_points(heights)
+    horizontal_lines = get_lines_at_heights(heights, minx, maxx)
+    intersections = get_intersections(shape, horizontal_lines)
+    split_lines = []
+    direction = False
+    for i, intersection in enumerate(intersections):
+        if type(intersection) == LineString:
+            if i > 0:
+                if type(intersections[i-1]) == MultiLineString:
+                    lines = horizontal_lines[i-1]
+                    if direction:
+                        split_lines.append(lines.coords[1])
+                        split_lines.append(lines.coords[0])
+                        direction = False
+                    else:
+                        split_lines.append(lines.coords[0])
+                        split_lines.append(lines.coords[1])
+                        direction = True
+            if i < len(horizontal_lines) - 1:
+                if type(intersections[i+1]) == MultiLineString:
+                    lines = horizontal_lines[i+1]
+                    if direction:
+                        split_lines.append(lines.coords[1])
+                        split_lines.append(lines.coords[0])
+                        direction = False
+                    else:
+                        split_lines.append(lines.coords[0])
+                        split_lines.append(lines.coords[1])
+                        direction = True
+    if split_lines:
+        return split(shape, LineString(split_lines))
+    else:
+        return [shape]
+
+
+def rectilinear_fill(shape, gap):
+    minx, miny, maxx, maxy = get_bounds(shape)
+    num_h_segments = int((maxy - miny)/gap) + 1
+    heights = [y*gap+miny for y in range(num_h_segments)]
+
+    final = slice_shape(shape, gap)
+    fill_segments = []
+    horizontal_lines = get_lines_at_heights(heights, minx, maxx)
+    for shape in final:
+        fill_segments.append(fill_shape(shape, gap, horizontal_lines))
+
+    fill_segments = remove_overlaps(fill_segments)
+    return fill_segments
+
+
+if __name__ == "__main__":
+    shape_border = [(80.0, 85.0), (80.0, 90.0), (82.0, 91.0), (90.0, 91.0), (90.0, 89.5), (112.0, 89.5), (112.0, 107.5), (
+        90.0, 107.5), (90.0, 106.0), (82.0, 106.0), (80.0, 107.0), (80.0, 112.0), (117.0, 112.0), (117.0, 85.0), (80.0, 85.0)]
+    shape = Polygon(shape_border)
+
+    gap = 0.5
+    ax = plt.subplot()
+
+    fill_segments = rectilinear_fill(shape, gap)
+    ax.grid(True)
+    plt.axis('equal')
+    for line in fill_segments:
+        x, y = line.xy
+        ax.plot(x, y)
+        plt.pause(0.5)
+
+    plt.show()
