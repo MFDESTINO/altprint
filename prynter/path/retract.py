@@ -16,6 +16,4 @@ def retract(x, y, f):
     acy = [A[1], C[1]]
     cbx = [C[0], B[0]]
     cby = [C[1], B[1]]
-    AC = [acx, acy]
-    CB = [cbx, cby]
-    return AC, CB
+    return acx, acy, cbx, cby

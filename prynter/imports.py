@@ -1,4 +1,5 @@
 import ezdxf
+from shapely.geometry import LineString, LinearRing
 
 def parse_line(e):
     E = 9
@@ -15,5 +16,9 @@ def read_dxf(file, layer):
         if entity.dxftype() == "LINE":
             if entity.dxf.layer == layer:
                 bounds.append(parse_line(entity)[0])
-    bounds.append(bounds[0])
-    return bounds
+
+    ring = LinearRing(bounds)
+    if not ring.is_ccw:
+        ring.coords = list(ring.coords)[::-1]
+    final = LineString(ring)
+    return final

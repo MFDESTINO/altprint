@@ -151,7 +151,7 @@ if __name__ == "__main__":
     plt.axis('equal')
     for line in fill_segments:
         x, y = line.xy
-        ax.plot(x, y)
+        ax.plot(x, y, linewidth=2)
         plt.pause(0.5)
 
     plt.show()
