@@ -1,9 +1,9 @@
 import matplotlib.pyplot as plt
+import numpy as np
 from shapely.geometry import LineString, GeometryCollection, Polygon, MultiPoint, MultiLineString, Point
 from shapely.affinity import translate
 from shapely.ops import split
 from shapely.ops import linemerge
-
 
 def get_bounds(shape):
     minx = shape.bounds[0]
@@ -57,7 +57,7 @@ def remove_overlaps(fill_segments):
     return fill_segments
 
 
-def fill_shape(border, gap, horizontal_lines):
+def fill_shape(border, horizontal_lines):
     x0 = []
     x1 = []
     y0 = []
@@ -124,29 +124,39 @@ def slice_shape(shape, gap):
 
 
 def rectilinear_fill(shape, gap):
-    minx, miny, maxx, maxy = get_bounds(shape)
-    num_h_segments = int((maxy - miny)/gap) + 1
-    heights = [y*gap+miny for y in range(num_h_segments)]
-
+    original_shape = shape
     final = slice_shape(shape, gap)
+    heights = []
+    for shape in final:
+        minx, miny, maxx, maxy = get_bounds(shape)
+        num_h_segments = int((maxy - miny)/gap) + 1
+        heights.extend(list(np.linspace(miny, maxy, num_h_segments)))
+    heights = list(set(heights))
+    heights.sort()
     fill_segments = []
+    minx, miny, maxx, maxy = get_bounds(Polygon(original_shape))
     horizontal_lines = get_lines_at_heights(heights, minx, maxx)
     for shape in final:
-        fill_segments.append(fill_shape(shape, gap, horizontal_lines))
+        fill_segments.append(fill_shape(shape, horizontal_lines))
 
     fill_segments = remove_overlaps(fill_segments)
     return fill_segments
 
 
 if __name__ == "__main__":
-    shape_border = [(80.0, 85.0), (80.0, 90.0), (82.0, 91.0), (90.0, 91.0), (90.0, 89.5), (112.0, 89.5), (112.0, 107.5), (
-        90.0, 107.5), (90.0, 106.0), (82.0, 106.0), (80.0, 107.0), (80.0, 112.0), (117.0, 112.0), (117.0, 85.0), (80.0, 85.0)]
+    from prynter.imports import read_dxf
+    from prynter.path.contour import contour
+    shape_border = read_dxf("snap.dxf", "PARTE01")
+
     shape = Polygon(shape_border)
 
     gap = 0.5
     ax = plt.subplot()
-
-    fill_segments = rectilinear_fill(shape, gap)
+    x, y = shape_border.xy
+    ax.plot(x, y)
+    
+    fill_segments = rectilinear_fill(shape, gap) 
+    
     ax.grid(True)
     plt.axis('equal')
     for line in fill_segments:
