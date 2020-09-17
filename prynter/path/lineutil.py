@@ -1,3 +1,5 @@
+from shapely.ops import split
+
 def retract(x, y, f):
     """
     Splits an AB segment from a C point, between A and B. Used for creating
@@ -17,3 +19,10 @@ def retract(x, y, f):
     cbx = [C[0], B[0]]
     cby = [C[1], B[1]]
     return acx, acy, cbx, cby
+
+def split_lines(lines, spliter):
+    final = []
+    for line in lines:
+        for i in list(split(line, spliter)):
+            final.append(i)
+    return final
