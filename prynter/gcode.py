@@ -1,5 +1,6 @@
-import re
-
+from shapely.geometry import LineString
+from prynter.flow import extrude
+from prynter.path.lineutil import retract
 def segment(x, y, z, e, v):
     layer = []
     layer.append('; segment\n')
@@ -46,4 +47,24 @@ def output_gcode(layers, output_name, header, footer):
             f.write(layer)
         f.write(footer)
 
-
+def segment_to_gcode(line, regions, default_flow, z, v, x0, y0):
+    layers = []
+    for region, flow in regions:
+        if line.within(region):
+            x, y = line.xy
+            acx, acy, cbx, cby = retract(x, y, 0.9)
+            if LineString([(x0, y0), (x[0], y[0])]).length > 1:
+                layers.append(jump(x[0], y[0]))
+            x0, y0 = x[-1], y[-1]
+            e1 = extrude(acx, acy, default_flow*flow)
+            layers.append(segment(acx, acy, z, e1, v))
+            e2 = extrude(cbx, cby, default_flow*2)
+            layers.append(segment(cbx, cby, z, e2, v))
+            return layers, x0, y0
+    x, y = line.xy
+    if LineString([(x0, y0), (x[0], y[0])]).length > 1:
+        layers.append(jump(x[0], y[0]))
+    x0, y0 = x[-1], y[-1]
+    e = extrude(x, y, default_flow)
+    layers.append(segment(x, y, z, e, v))
+    return layers, x0, y0

@@ -1,41 +1,57 @@
 #!/usr/bin/env python3
 
+##### test
 import matplotlib.pyplot as plt
 from shapely.geometry import LineString, Polygon
-from shapely.affinity import translate
+#####
+
 from prynter.core import Layer
-from prynter.path.rectilinear_fill_v2 import rectilinear_fill
-from prynter.plot import plot_layer
+from prynter.path.rectilinear_fill import rectilinear_fill
+from prynter.path.lineutil import retract, split_lines
 from prynter.flow import calculate, extrude
-from prynter.gcode import gen_layer2, output_gcode, read_script
+from prynter.gcode import segment, jump, segment_to_gcode, read_script, output_gcode
 
-object_border = LineString([(0,0), (5, 0), (10, 5), (15, 5), (15, 0), (20,0), (20,18), (15,20), (10,10), (5, 10), (5, 20), (0, 20),(0,0)])
-object_border = translate(object_border, 100, 100)
+border = LineString([(0,0), (50,0), (50, 10), (0, 10),  (0,0)])
+area1 = Polygon([(20,-1), (30,-1), (30,11), (20,11), (20,-1)])
 
-layer_0 = Layer(border=object_border, perimeters_num=2)
+layer_0 = Layer(border=border)
 layer_0.infill = rectilinear_fill(Polygon(layer_0.inner_border), 0.5)
+layer_0.perimeters = split_lines(layer_0.perimeters, LineString(area1.exterior))
+layer_0.infill = split_lines(layer_0.infill, LineString(area1.exterior))
 
-flow_val = calculate()
-
+flow = calculate()
 layers = []
-for i in range(10):
-    for perimeter in layer_0.perimeters:
-        x, y = perimeter.xy
-        e = extrude(x, y, flow_val)
-        layers.append(gen_layer2(x, y, 0.2 * (i+1), e, 3000))
-    for line in layer_0.infill:
-        x, y = line.xy
-        e = extrude(x, y, flow_val)
-        layers.append(gen_layer2(x, y, 0.2 * (i+1), e, 3000))
-
-
+x0, y0 = 0, 0
+v = 2400
 START = read_script("scripts/start.gcode")
 END = read_script("scripts/end.gcode")
+regions = [(area1, 0)]
 
-output_gcode(layers, "teste", START, END)
+for i in range(10):
+    z = 0.2 * (i+1)
+    for line in layer_0.perimeters:
+        l, x0, y0 = segment_to_gcode(line, regions, flow, 0.2 * (i+1), v, x0, y0)
+        layers.extend(l)
+    for line in layer_0.infill:
+        l, x0, y0 = segment_to_gcode(line, regions, flow, 0.2 * (i+1), v, x0, y0)
+        layers.extend(l)
+
+
+output_gcode(layers, "test", START, END)
 
 ax = plt.subplot()
-plot_layer(ax, layer_0)
+
+for line in layer_0.perimeters:
+    x, y = line.xy
+    ax.plot(x, y)
+
+for line in layer_0.infill:
+    x, y = line.xy
+    ax.plot(x, y)
+
+x, y = area1.exterior.xy
+ax.plot(x, y, color="red")
+
 ax.grid(True)
 plt.axis('equal')
 plt.show()
