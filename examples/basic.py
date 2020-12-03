@@ -5,11 +5,11 @@ import matplotlib.pyplot as plt
 from shapely.geometry import LineString, Polygon
 #####
 
-from prynter.core import Layer
-from prynter.path.rectilinear_fill import rectilinear_fill
-from prynter.path.lineutil import retract, split_lines
-from prynter.flow import calculate, extrude
-from prynter.gcode import segment, jump, segment_to_gcode, read_script, output_gcode
+from altprint.core import Layer
+from altprint.path.rectilinear_fill import rectilinear_fill
+from altprint.path.lineutil import retract, split_lines
+from altprint.flow import calculate, extrude
+from altprint.gcode import segment, jump, segment_to_gcode, read_script, output_gcode
 
 border = LineString([(0,0), (50,0), (50, 10), (0, 10),  (0,0)])
 area1 = Polygon([(20,-1), (30,-1), (30,11), (20,11), (20,-1)])

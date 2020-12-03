@@ -1,4 +1,4 @@
-from prynter.path.contour import contour
+from altprint.path.contour import contour
 from shapely.geometry import LineString
 from shapely import affinity
 

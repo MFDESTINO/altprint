@@ -1,6 +1,6 @@
 from shapely.geometry import LineString
-from prynter.flow import extrude
-from prynter.path.lineutil import retract
+from altprint.flow import extrude
+from altprint.path.lineutil import retract
 def segment(x, y, z, e, v):
     layer = []
     layer.append('; segment\n')

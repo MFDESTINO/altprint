@@ -1,4 +1,3 @@
-import matplotlib.pyplot as plt
 import numpy as np
 from shapely.geometry import LineString, GeometryCollection, Polygon, MultiPoint, MultiLineString, Point
 from shapely.affinity import translate
@@ -143,25 +142,3 @@ def rectilinear_fill(shape, gap):
     return fill_segments
 
 
-if __name__ == "__main__":
-    from prynter.imports import read_dxf
-    from prynter.path.contour import contour
-    shape_border = read_dxf("snap.dxf", "PARTE01")
-
-    shape = Polygon(shape_border)
-
-    gap = 0.5
-    ax = plt.subplot()
-    x, y = shape_border.xy
-    ax.plot(x, y)
-    
-    fill_segments = rectilinear_fill(shape, gap) 
-    
-    ax.grid(True)
-    plt.axis('equal')
-    for line in fill_segments:
-        x, y = line.xy
-        ax.plot(x, y, linewidth=2)
-        plt.pause(0.5)
-
-    plt.show()
