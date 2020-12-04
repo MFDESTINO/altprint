@@ -5,13 +5,14 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="altprint",
-    version="0.0.5",
+    version="0.0.3",
     author="couto0",
     author_email="daniel.couto64@gmail.com",
     description="Alternative 3d printing",
     long_description=long_description,
     long_description_content_type="text/markdown",
     url="https://github.com/couto0/altprint",
+    keywords='FFF FDM 3dprinting slicer slicing gcode',
     packages=setuptools.find_packages(),
     classifiers=[
         "Programming Language :: Python :: 3",
