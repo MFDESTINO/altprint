@@ -4,3 +4,6 @@ qwe.py
 img/*
 output/*
 main.py
+altprint.egg-info/*
+build/*
+dist/*
