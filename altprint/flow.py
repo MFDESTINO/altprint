@@ -1,6 +1,6 @@
 import numpy as np
 
-def calculate(w = 0.48, h = 0.2, df = 1.75, adjust = 1):
+def calculate(w = 0.48, h = 0.2, df = 1.75, adjust = 1.2):
     """
     Calculates the flow multiplier factor, using the rounded rectangle model.
 
