@@ -1,4 +1,6 @@
 from shapely.ops import split
+from altprint.core import Raster
+
 
 def retract(x, y, f):
     """
@@ -20,9 +22,9 @@ def retract(x, y, f):
     cby = [C[1], B[1]]
     return acx, acy, cbx, cby
 
-def split_lines(lines, spliter):
+def split_raster(rasters, spliter):
     final = []
-    for line in lines:
-        for i in list(split(line, spliter)):
-            final.append(i)
+    for raster in rasters:
+        for i in list(split(raster.path, spliter)):
+            final.append(Raster(i, raster.z, raster.flow))
     return final
