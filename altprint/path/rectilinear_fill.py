@@ -1,144 +1,115 @@
+from shapely.geometry import LineString, Polygon, Point, MultiLineString, MultiPolygon, MultiPoint
+from shapely.ops import split, linemerge, snap
+from shapely.affinity import rotate
+from altprint.path.partition import partition_shape_with_regions
 import numpy as np
-from shapely.geometry import LineString, GeometryCollection, Polygon, MultiPoint, MultiLineString, Point
-from shapely.affinity import translate
-from shapely.ops import split
-from shapely.ops import linemerge
 
-def get_bounds(shape):
-    minx = shape.bounds[0]
-    miny = shape.bounds[1]
-    maxx = shape.bounds[2]
-    maxy = shape.bounds[3]
+
+def get_bounds(polygon):
+    minx = polygon.bounds[0]
+    miny = polygon.bounds[1]
+    maxx = polygon.bounds[2]
+    maxy = polygon.bounds[3]
     return minx, miny, maxx, maxy
 
 
-def get_point_heights(shape):
-    y = []
-    for coord in shape.coords:
-        y.append(coord[1])
-    y = list(set(y))  # remove doubles
-    y.sort()
-    return y
+def get_hlines(polygon, gap):
+    h_lines = []
+    minx, miny, maxx, maxy = get_bounds(polygon)
+    num_hlines = int((maxy - miny)/gap) + 1
+    heights = list(np.linspace(miny, maxy, num_hlines))
+    for h in heights:
+        h_lines.append(LineString([(minx, h), (maxx, h)]))
+    return h_lines
 
 
-def add_mid_points(points):
-    res = []
-    for i in range(len(points)-1):
-        res.append(points[i])
-        res.append((points[i+1]+points[i])/2)
-    return res
-
-
-def get_lines_at_heights(heights, minx, maxx):
-    lines = []
-    for y in heights:
-        lines.append(LineString([(minx, y), (maxx, y)]))
-    return lines
-
-
-def get_intersections(shape, horizontal_lines):
+def get_intersections(polygon, hlines):
     intersections = []
-    for line in horizontal_lines:
-        intersection = shape.intersection(line)
+    for line in hlines:
+        intersection = polygon.intersection(line)
+        if type(intersection) == Point:
+            intersection = LineString([intersection, intersection])
+        if type(intersection) == MultiLineString:
+            merged = linemerge(intersection)
+            intersection = LineString([merged.coords[0], merged.coords[-1]])
         intersections.append(intersection)
     return intersections
 
 
-def remove_overlaps(fill_segments):
-    for i, line in enumerate(fill_segments):
-        final_line = LineString(line.coords[-2:])
-        for j, line2 in enumerate(fill_segments):
-            first_line = LineString(line2.coords[:2])
-            if final_line.within(first_line):
-                fill_segments[i] = LineString(line.coords[:-2])
-            elif first_line.within(final_line):
-                fill_segments[j] = LineString(line2.coords[2:])
-    return fill_segments
-
-
-def fill_shape(border, horizontal_lines):
-    x0 = []
-    x1 = []
-    y0 = []
-    y1 = []
-    for line in horizontal_lines:
-        inter = line.intersection(border)
-        if inter.bounds:
-            minx, miny, maxx, maxy = get_bounds(inter)
-            x0.append(minx)
-            y0.append(miny)
-            x1.append(maxx)
-            y1.append(maxy)
-
-    fill = []
-    for i in range(len(x0)-1):
-        fill.append(LineString([(x0[i], y0[i]), (x1[i], y1[i])]))
+def get_path(border, intersections):
+    path = []
+    for i in range(len(intersections)-1):
+        path.append(intersections[i])
+        bottom_coords = sorted(intersections[i].coords, key=lambda x: x[0])
+        upper_coords = sorted(intersections[i+1].coords, key=lambda x: x[0])
         if i % 2:
-            line = LineString([(x0[i], y0[i]), (x0[i+1], y0[i+1])])
+            pts = [bottom_coords[0], upper_coords[0]]
         else:
-            line = LineString([(x1[i], y1[i]), (x1[i+1], y1[i+1])])
-        fill.append(line)
-
-    fill.append(LineString([(x0[-1], y0[-1]), (x1[-1], y1[-1])]))
-    fill = linemerge(fill)
-    return fill
-
-
-def slice_shape(shape, gap):
-    minx, miny, maxx, maxy = get_bounds(shape)
-    heights = get_point_heights(shape.exterior)
-    heights = add_mid_points(heights)
-    horizontal_lines = get_lines_at_heights(heights, minx, maxx)
-    intersections = get_intersections(shape, horizontal_lines)
-    split_lines = []
-    direction = False
-    for i, intersection in enumerate(intersections):
-        if type(intersection) == LineString:
-            if i > 0:
-                if type(intersections[i-1]) == MultiLineString:
-                    lines = horizontal_lines[i-1]
-                    if direction:
-                        split_lines.append(lines.coords[1])
-                        split_lines.append(lines.coords[0])
-                        direction = False
-                    else:
-                        split_lines.append(lines.coords[0])
-                        split_lines.append(lines.coords[1])
-                        direction = True
-            if i < len(horizontal_lines) - 1:
-                if type(intersections[i+1]) == MultiLineString:
-                    lines = horizontal_lines[i+1]
-                    if direction:
-                        split_lines.append(lines.coords[1])
-                        split_lines.append(lines.coords[0])
-                        direction = False
-                    else:
-                        split_lines.append(lines.coords[0])
-                        split_lines.append(lines.coords[1])
-                        direction = True
-    if split_lines:
-        return split(shape, LineString(split_lines))
-    else:
-        return [shape]
+            pts = [bottom_coords[1], upper_coords[1]]
+        mp_tolerance = MultiPolygon([Point(pts[0]).buffer(0.001), Point(pts[1]).buffer(0.001)])
+        mp = MultiPoint([Point(pts[0]), Point(pts[1])])
+        splited = split(border, mp_tolerance)
+        splited = sorted(splited, key=lambda geom: geom.length)
+        for geom in splited:
+            if geom.length > 0.003:
+                path.append(geom)
+                break
+    path.append(intersections[-1])
+    return path
 
 
-def rectilinear_fill(shape, gap):
-    original_shape = shape
-    final = slice_shape(shape, gap)
-    heights = []
-    for shape in final:
-        minx, miny, maxx, maxy = get_bounds(shape)
-        num_h_segments = int((maxy - miny)/gap) + 1
-        heights.extend(list(np.linspace(miny, maxy, num_h_segments)))
-    heights = list(set(heights))
-    heights.sort()
-    fill_segments = []
-    minx, miny, maxx, maxy = get_bounds(Polygon(original_shape))
-    horizontal_lines = get_lines_at_heights(heights, minx, maxx)
-    for shape in final:
-        fill_segments.append(fill_shape(shape, horizontal_lines))
+def snap_and_merge_path(path, tolerance=0.003):
+    '''
+    snap the vertices of the connection lines to fit the horizontal lines,
+    so when merging there'll be no tolerance error.
+    '''
+    path_new = []
+    for i in range(len(path)-1):
+        if not i % 2:
+            path_new.append(path[i])
+        else:
+            line = snap(path[i], path[i-1], tolerance)
+            line = snap(line, path[i+1], tolerance)
+            path_new.append(line)
+    path_new.append(path[-1])
+    path_new = linemerge(path_new)
+    if type(path_new) == MultiLineString:
+        path_new = list(path_new)
+    elif type(path_new) == LineString:
+        path_new = [path_new]
+    return path_new
 
-    fill_segments = remove_overlaps(fill_segments)
-    return fill_segments
+def fill_monotone_polygon(polygon, rgap):
+    border = polygon.exterior
 
+def remove_overlaps(infill):
+    overlaps = []
+    for i in range(len(infill)):
+        for j in range(i, len(infill)):
+            if i != j:
+                overlap = infill[i].intersection(infill[j])
+                if overlap:
+                    overlaps.append(overlap)
 
+    infill = MultiLineString(infill)
+    overlaps2 = MultiLineString(overlaps)
+    infill_without_overlaps = list(infill.difference(overlaps2))
+    infill_without_overlaps.extend(overlaps)
+    return infill_without_overlaps
+
+def rectilinear_fill(shape, regions = [], angle=0, rgap=0.5, egap=0, igap=0.5):
+    shape=rotate(shape, -angle, origin=[0, 0])
+    polygons = partition_shape_with_regions(shape, regions, egap, igap)
+    infill = []
+    for polygon in polygons:
+        hlines = get_hlines(polygon, rgap)
+        intersections = get_intersections(polygon, hlines)
+        path = get_path(LineString(polygon.exterior), intersections)
+        infill.extend(snap_and_merge_path(path))
+    infill = remove_overlaps(infill)
+    infill = sorted(infill, key=lambda line: line.bounds[0])
+    infill = sorted(infill, key=lambda line: line.bounds[1])
+    infill_rotated = []
+    for line in infill:
+        infill_rotated.append(rotate(line, angle, origin=[0,0]))
+    return infill_rotated
