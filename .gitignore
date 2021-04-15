@@ -7,3 +7,9 @@ main.py
 altprint.egg-info/*
 build/*
 dist/*
+gcode/*
+models/*
+figures/*
+tests/*
+cgal_bindings/y_monotone_partition/*.cxx
+cgal_bindings/y_monotone_partition/*.o
