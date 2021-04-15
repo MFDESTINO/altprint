@@ -1,5 +1,5 @@
-from y_monotone_partition.y_monotone_partition import y_monotone_partition as _y_monotone_partition
-from y_monotone_partition.y_monotone_partition import DoubleVector
+from altprint.path.cgal_bindings.y_monotone_partition.y_monotone_partition import y_monotone_partition as _y_monotone_partition
+from altprint.path.cgal_bindings.y_monotone_partition.y_monotone_partition import DoubleVector
 from shapely.geometry import Polygon
 
 
@@ -15,7 +15,7 @@ def y_monotone_partition(poly):
     # the slice is to remove the last redundant point
     x_points = to_vector(x[:-1])
     y_points = to_vector(y[:-1])
-    p = partition(x_points, y_points)
+    p = _y_monotone_partition(x_points, y_points)
     polygon_number = int(len(p) / 2)
     polygons = []
     for i in range(polygon_number):
