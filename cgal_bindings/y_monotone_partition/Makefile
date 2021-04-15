@@ -13,3 +13,10 @@ all:
 	swig -c++ -python -o $(TARGET)_wrap.cxx $(TARGET).i
 	g++ $(FLAGS) $(PYTHONI) -c $(TARGET)_wrap.cxx -o $(TARGET)_wrap.o
 	g++ $(PYTHONL) $(LIBFLAGS) -lgmp -shared $(TARGET).o $(TARGET)_wrap.o -o _$(TARGET).so
+
+clean:
+	rm $(TARGET)_wrap.cxx
+	rm $(TARGET)_wrap.o
+	rm $(TARGET).o
+	rm _$(TARGET).so
+	rm $(TARGET).py
