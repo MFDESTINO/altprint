@@ -1,4 +1,4 @@
-from shapely.geometry import Polygon
+from shapely.geometry import Polygon, MultiPolygon
 from altprint.path.cgal_bindings.cgal_bindings import y_monotone_partition
 
 def partition_polygons_with_gap(shape, egap, igap):
@@ -13,9 +13,16 @@ def partition_polygons_with_gap(shape, egap, igap):
             eroded_partitioned.append(p)
     return eroded_partitioned
 
-def partition_shape_with_regions(shape, regions, egap, igap):
-    new_shape = list(shape.difference(regions))
-    new_shape.extend(regions)
+def partition_shape_with_regions(shape, regions, egap, igap, pgap):
+    new_regions = []
+    for region in list(regions):
+        new_regions.append(region.buffer(-pgap, join_style=2))
+    new_regions = MultiPolygon(new_regions)
+    if regions:
+        new_shape = list(shape.difference(new_regions))
+        new_shape.extend(new_regions)
+    else:
+        new_shape = [shape]
     partitioned = []
     for region in new_shape:
         partitioned.extend(partition_polygons_with_gap(region, egap, igap))
@@ -34,7 +41,7 @@ if __name__ == "__main__":
 
     shape = planes[0].polygons_full[0]
     regions = MultiPolygon(list(planes2[0].polygons_full))
-    partitioned = partition_shape_with_regions(shape, regions, 0, 0.5)
+    partitioned = partition_shape_with_regions(shape, regions, 0, 0.5, 0)
 
     x, y = shape.exterior.xy
     ax.fill(x, y)

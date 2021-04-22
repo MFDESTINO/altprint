@@ -1,5 +1,5 @@
 from shapely.ops import split
-from altprint.core import Raster
+from shapely.geometry import LineString
 
 
 def retract(x, y, f):
@@ -22,9 +22,13 @@ def retract(x, y, f):
     cby = [C[1], B[1]]
     return acx, acy, cbx, cby
 
-def split_raster(rasters, spliter):
+
+def split_lines(lines, spliter):
     final = []
-    for raster in rasters:
-        for i in list(split(raster.path, spliter)):
-            final.append(Raster(i, raster.z, raster.flow))
+    for line in lines:
+        for i in list(split(line, spliter)):
+            if type(i) == LineString:
+                final.append(i)
+            else:
+                print("not linestring")
     return final

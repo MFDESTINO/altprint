@@ -2,24 +2,6 @@ from altprint.flow import calculate
 from shapely.geometry import Polygon, MultiPolygon, LineString
 import numpy as np
 
-
-class Raster:
-    def __init__(self, path, z, flow=calculate()):
-        self.path = LineString(path)
-        self.xy = self.path.xy
-        self.z = z
-        self.flow = flow
-
-    def extrude(self):
-        x, y = self.xy
-        extrusion = np.zeros(len(x))
-        for i in range(1, len(x)):
-            dx = abs(x[i] - x[i - 1])
-            dy = abs(y[i] - y[i - 1])
-            extrusion[i] = np.sqrt((dx**2) + (dy**2)) * self.flow + extrusion[i-1]
-        return extrusion
-
-
 class Layer:
     def __init__(self, **kwargs):
         prop_defaults = {
@@ -47,8 +29,8 @@ class Layer:
             elif type(eroded) == MultiPolygon:
                 polygons = list(eroded)
             for poly in polygons:
-                perimeter = Raster(poly.exterior, self.z)
-                self.perimeters.append(perimeter)
+                perimeter = poly.exterior
+                self.perimeters.append(LineString(perimeter))
 
         eroded = self.shape.buffer(-self.perimeters_gap *
                                    self.perimeters_num, join_style=2)

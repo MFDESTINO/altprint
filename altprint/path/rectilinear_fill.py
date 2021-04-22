@@ -97,9 +97,9 @@ def remove_overlaps(infill):
     infill_without_overlaps.extend(overlaps)
     return infill_without_overlaps
 
-def rectilinear_fill(shape, regions = [], angle=0, rgap=0.5, egap=0, igap=0.5):
+def rectilinear_fill(shape, regions = [], angle=0, rgap=0.5, egap=0, igap=0.5, pgap=0):
     shape=rotate(shape, -angle, origin=[0, 0])
-    polygons = partition_shape_with_regions(shape, regions, egap, igap)
+    polygons = partition_shape_with_regions(shape, regions, egap, igap, pgap)
     infill = []
     for polygon in polygons:
         hlines = get_hlines(polygon, rgap)
