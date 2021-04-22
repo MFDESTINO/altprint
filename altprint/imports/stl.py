@@ -14,13 +14,15 @@ def slice_stl(model, layer_height=0.2, heights=None, table_center=[100, 100, 0],
         mesh.apply_translation(translation)
 
     if heights:
-        planes = mesh.section_multiplane([0, 0, 0], [0, 0, 1], heights)
+        sections = mesh.section_multiplane([0, 0, 0], [0, 0, 1], heights)
     else:
         zi = mesh.bounds[0][2]
         zf = mesh.bounds[1][2]
         h = zf - zi
         heights = list(np.linspace(zi, zf, round(h/layer_height)+1))
         heights[-1] = heights[-1]-0.001
-        planes = mesh.section_multiplane([0, 0, 0], [0, 0, 1], heights)
-
+        sections = mesh.section_multiplane([0, 0, 0], [0, 0, 1], heights)
+    planes = []
+    for section in sections:
+        planes.append(list(section.polygons_full))
     return planes, translation, heights

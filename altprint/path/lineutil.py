@@ -32,3 +32,9 @@ def split_lines(lines, spliter):
             else:
                 print("not linestring")
     return final
+
+def split_by_regions(lines, regions):
+    final = lines
+    for region in regions:
+        final = split_lines(final, region)
+    return final

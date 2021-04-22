@@ -47,9 +47,10 @@ def output_gcode(layers, output_name, header, footer):
             f.write(layer)
         f.write(footer)
 
-def segment_to_gcode(line, regions, default_flow, z, v, x0, y0):
+def segment_to_gcode(line, regions, regions_flow, default_flow,  z, v, x0, y0):
     layers = []
-    for region, flow in regions:
+    for i, region in enumerate(regions):
+        flow = regions_flow[i]
         if line.within(region):
             x, y = line.xy
             acx, acy, cbx, cby = retract(x, y, 0.9)
