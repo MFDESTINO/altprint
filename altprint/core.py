@@ -12,6 +12,7 @@ class Layer:
             "perimeters": [],
             "infill_shape": [],
             "infill": [],
+            "flex_regions": [],
         }
 
         for (prop, default) in prop_defaults.items():

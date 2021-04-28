@@ -47,25 +47,25 @@ def output_gcode(layers, output_name, header, footer):
             f.write(layer)
         f.write(footer)
 
-def segment_to_gcode(line, regions, regions_flow, default_flow,  z, v, x0, y0):
-    layers = []
-    for i, region in enumerate(regions):
-        flow = regions_flow[i]
+def segment_to_gcode(line, regions, flex_flow, default_flow,  z, v, x0, y0):
+    segments_gcode = []
+    for region in regions:
+        flow = flex_flow
         if line.within(region):
             x, y = line.xy
             acx, acy, cbx, cby = retract(x, y, 0.9)
             if LineString([(x0, y0), (x[0], y[0])]).length > 1:
-                layers.append(jump(x[0], y[0]))
+                segments_gcode.append(jump(x[0], y[0]))
             x0, y0 = x[-1], y[-1]
             e1 = extrude(acx, acy, default_flow*flow)
             layers.append(segment(acx, acy, z, e1, v))
             e2 = extrude(cbx, cby, default_flow*2)
-            layers.append(segment(cbx, cby, z, e2, v))
-            return layers, x0, y0
+            segments_gcode.append(segment(cbx, cby, z, e2, v))
+            return segments_gcode, x0, y0
     x, y = line.xy
     if LineString([(x0, y0), (x[0], y[0])]).length > 1:
-        layers.append(jump(x[0], y[0]))
+        segments_gcode.append(jump(x[0], y[0]))
     x0, y0 = x[-1], y[-1]
     e = extrude(x, y, default_flow)
-    layers.append(segment(x, y, z, e, v))
-    return layers, x0, y0
+    segments_gcode.append(segment(x, y, z, e, v))
+    return segments_gcode, x0, y0
