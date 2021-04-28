@@ -14,7 +14,7 @@ def retract(x, y, f):
     Tuple containg the two new segments. (tuple)
     """
     A = [x[0], y[0]]
-    B = [x[1], y[1]]
+    B = [x[-1], y[-1]]
     C = [A[0] + f*(B[0]-A[0]), A[1] + f*(B[1]-A[1])]
     acx = [A[0], C[0]]
     acy = [A[1], C[1]]

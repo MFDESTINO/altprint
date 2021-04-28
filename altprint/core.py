@@ -29,8 +29,10 @@ class Layer:
             elif type(eroded) == MultiPolygon:
                 polygons = list(eroded)
             for poly in polygons:
-                perimeter = poly.exterior
-                self.perimeters.append(LineString(perimeter))
+                for hole in poly.interiors:
+                    self.perimeters.append(LineString(hole))
+            for poly in polygons:
+                self.perimeters.append(LineString(poly.exterior))
 
         eroded = self.shape.buffer(-self.perimeters_gap *
                                    self.perimeters_num, join_style=2)
