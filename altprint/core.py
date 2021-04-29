@@ -2,16 +2,19 @@ from altprint.flow import calculate
 from shapely.geometry import Polygon, MultiPolygon, LineString
 import numpy as np
 
+
 class Layer:
     def __init__(self, **kwargs):
         prop_defaults = {
             "shape": None,
             "z": 0,
+            "external_adjust": 0.5,
             "perimeters_gap": 0.5,
             "perimeters_num": 2,
             "perimeters": [],
             "infill_shape": [],
             "infill": [],
+            "complete_fill": [],
             "flex_regions": [],
         }
 
@@ -22,7 +25,8 @@ class Layer:
             raise TypeError("shape must be a polygon")
 
         for i in range(self.perimeters_num):
-            eroded = self.shape.buffer(-self.perimeters_gap*i, join_style=2)
+            eroded = self.shape.buffer(-self.perimeters_gap*(i)
+                                        - self.external_adjust/2, join_style=2)
             if eroded.is_empty:
                 break
             if type(eroded) == Polygon:
@@ -36,7 +40,7 @@ class Layer:
                 self.perimeters.append(LineString(poly.exterior))
 
         eroded = self.shape.buffer(-self.perimeters_gap *
-                                   self.perimeters_num, join_style=2)
+                                   self.perimeters_num - self.external_adjust/2, join_style=2)
         if eroded.is_empty:
             self.infill_shape = []
         else:

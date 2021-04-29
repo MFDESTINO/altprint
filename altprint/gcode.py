@@ -58,7 +58,7 @@ def segment_to_gcode(line, regions, flex_flow, default_flow,  z, v, x0, y0):
                 segments_gcode.append(jump(x[0], y[0]))
             x0, y0 = x[-1], y[-1]
             e1 = extrude(acx, acy, default_flow*flow)
-            layers.append(segment(acx, acy, z, e1, v))
+            segments_gcode.append(segment(acx, acy, z, e1, v))
             e2 = extrude(cbx, cby, default_flow*2)
             segments_gcode.append(segment(cbx, cby, z, e2, v))
             return segments_gcode, x0, y0
