@@ -24,5 +24,8 @@ def slice_stl(model, layer_height=0.2, heights=None, table_center=[100, 100, 0],
         sections = mesh.section_multiplane([0, 0, 0], [0, 0, 1], heights)
     planes = []
     for section in sections:
-        planes.append(list(section.polygons_full))
+        if section:
+            planes.append(list(section.polygons_full))
+        else:
+            planes.append([])
     return planes, translation, heights

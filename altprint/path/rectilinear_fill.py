@@ -105,7 +105,7 @@ if __name__ == "__main__":
     border = [(0, 0), (10, 0), (10, 10), (20, 10), (20, 5), (30, 5), (30, 40), (10,25), (0, 30)]
     holes = [[(5, 15), (15, 15), (15, 20), (5, 20)], [(20, 25), (25, 25), (25, 30)]]
     shape = Polygon(border, holes)
-    paths = rectilinear_fill(shape, 0.5)
+    paths = rectilinear_fill(shape, 0.5, 0)
 
     x, y = shape.exterior.xy
     ax.plot(x, y, color="gray")
@@ -113,5 +113,5 @@ if __name__ == "__main__":
 
     for path in paths:
         x, y = path.xy
-        ax.plot(x, y)
+        ax.plot(x, y, linewidth=2)
     plt.show()
