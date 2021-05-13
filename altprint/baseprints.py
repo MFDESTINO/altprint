@@ -31,8 +31,6 @@ class BasePrint():
         for (prop, default) in prop_defaults.items():
             setattr(self, prop, kwargs.get(prop, default))
         self.layers = []
-        self.START = read_script(self.start_script)
-        self.END = read_script(self.end_script)
         self.planes = None
         self.planes_flex = None
         self.translation = None
@@ -49,6 +47,16 @@ class BasePrint():
         self.layers = []
         for i in range(1, len(self.heights)):
             polygons = self.planes[i]
+            if i==1:
+                bounds = MultiPolygon(polygons).bounds
+                border_coords = [(bounds[0], bounds[1]),
+                                 (bounds[2], bounds[1]),
+                                 (bounds[2], bounds[3]),
+                                 (bounds[0], bounds[3])]
+                border = Polygon(border_coords).buffer(10, join_style=2)
+                brim = Layer(shape=border, perimeters_num=3,
+                              perimeters_gap=self.perimeters_gap, z=self.heights[i])
+                self.layers.append(brim)
             if self.flex_model:
                 flex_regions = self.planes_flex[i]
             else:
@@ -88,5 +96,6 @@ class BasePrint():
                         l, self.x0, self.y0 = segment_to_gcode(
                             infill, layer.flex_regions, self.flex_flow, self.flow*0.5, layer.z, self.speed, self.x0, self.y0)
                         layers_gcode.extend(l)
-
-        _output_gcode(layers_gcode, output_file, self.START, self.END)
+        START = read_script(self.start_script)
+        END = read_script(self.end_script)
+        _output_gcode(layers_gcode, output_file, START, END)
