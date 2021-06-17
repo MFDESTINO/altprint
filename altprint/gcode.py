@@ -1,6 +1,7 @@
 from shapely.geometry import LineString
 from altprint.flow import extrude
 from altprint.path.lineutil import retract
+
 def segment(x, y, z, e, v):
     layer = []
     layer.append('; segment\n')
@@ -30,7 +31,7 @@ def read_script(fname):
         script = ''.join(script)
     return script
 
-def output_gcode(layers, output_name, header, footer):
+def output_gcode(layers, output_name, header, footer, header_comment):
     """
     Generates the final gcode file
 
@@ -42,6 +43,7 @@ def output_gcode(layers, output_name, header, footer):
 
     """
     with open(output_name + '.gcode', 'w') as f:
+        f.write(header_comment)
         f.write(header)
         for layer in layers:
             f.write(layer)

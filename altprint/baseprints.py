@@ -4,12 +4,11 @@ from altprint.imports.stl import slice_stl
 from shapely.geometry import LineString, Polygon, MultiPolygon
 from shapely.affinity import rotate, translate
 from altprint.flow import calculate
-from altprint.gcode import segment, jump, read_script
-from altprint.gcode import segment_to_gcode
+from altprint.gcode import segment, jump, read_script, segment_to_gcode
 from altprint.gcode import output_gcode as _output_gcode
 from altprint.path.rectilinear_fill import rectilinear_fill
 from altprint.path.complete_fill import get_remaining_lines
-
+import json
 
 class BasePrint():
     def __init__(self, **kwargs):
@@ -35,8 +34,10 @@ class BasePrint():
             "end_script": "scripts/end.gcode",
         }
 
+        self.params = []
         for (prop, default) in prop_defaults.items():
             setattr(self, prop, kwargs.get(prop, default))
+            self.params.append(prop)
         self.layers = []
         self.planes = None
         self.planes_flex = None
@@ -100,6 +101,11 @@ class BasePrint():
 
     def output_gcode(self, output_file):
         layers_gcode = []
+        header_comment = {}
+        for param in self.params:
+            header_comment[param] = getattr(self, param)
+        header_comment = json.dumps(header_comment, indent=2)
+        header_comment = '\n;'.join(header_comment.split('\n'))[2:-2]
         for layer in self.layers:
             for perimeter in layer.perimeters:
                 l, self.x0, self.y0 = segment_to_gcode(
@@ -118,4 +124,4 @@ class BasePrint():
                         layers_gcode.extend(l)
         START = read_script(self.start_script)
         END = read_script(self.end_script)
-        _output_gcode(layers_gcode, output_file, START, END)
+        _output_gcode(layers_gcode, output_file, START, END, header_comment)
