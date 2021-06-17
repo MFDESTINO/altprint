@@ -47,25 +47,24 @@ def output_gcode(layers, output_name, header, footer):
             f.write(layer)
         f.write(footer)
 
-def segment_to_gcode(line, regions, flex_flow, default_flow,  z, v, x0, y0):
+def segment_to_gcode(line, regions, print_params, z, x0, y0):
     segments_gcode = []
     for region in regions:
-        flow = flex_flow
         if line.within(region):
             x, y = line.xy
-            acx, acy, cbx, cby = retract(x, y, 0.9)
+            acx, acy, cbx, cby = retract(x, y, print_params["flex_ratio"])
             if LineString([(x0, y0), (x[0], y[0])]).length > 1:
                 segments_gcode.append(jump(x[0], y[0]))
             x0, y0 = x[-1], y[-1]
-            e1 = extrude(acx, acy, default_flow*flow)
-            segments_gcode.append(segment(acx, acy, z, e1, v))
-            e2 = extrude(cbx, cby, default_flow*2)
-            segments_gcode.append(segment(cbx, cby, z, e2, v))
+            e1 = extrude(acx, acy, print_params["flex_flow1"])
+            segments_gcode.append(segment(acx, acy, z, e1, print_params["flex_speed1"]))
+            e2 = extrude(cbx, cby, print_params["flex_flow2"])
+            segments_gcode.append(segment(cbx, cby, z, e2, print_params["flex_speed2"]))
             return segments_gcode, x0, y0
     x, y = line.xy
     if LineString([(x0, y0), (x[0], y[0])]).length > 1:
         segments_gcode.append(jump(x[0], y[0]))
     x0, y0 = x[-1], y[-1]
-    e = extrude(x, y, default_flow)
-    segments_gcode.append(segment(x, y, z, e, v))
+    e = extrude(x, y, print_params["flow"])
+    segments_gcode.append(segment(x, y, z, e, print_params["speed"]))
     return segments_gcode, x0, y0
