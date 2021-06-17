@@ -14,8 +14,11 @@ def get_bounds(polygon):
 def get_hlines(polygon, gap):
     h_lines = []
     minx, miny, maxx, maxy = get_bounds(polygon)
-    num_hlines = int((maxy - miny)/gap) + 1
-    heights = list(np.linspace(miny, maxy, num_hlines))
+    num_hlines = int((maxy - miny)/gap)
+    heights = []
+    for i in range(num_hlines):
+        heights.append(gap*i+miny)
+    #heights = list(np.linspace(miny, maxy, num_hlines))
     for h in heights:
         h_lines.append(LineString([(minx, h), (maxx, h)]))
     return h_lines

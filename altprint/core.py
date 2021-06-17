@@ -11,11 +11,13 @@ class Layer:
             "external_adjust": 0.5,
             "perimeters_gap": 0.5,
             "perimeters_num": 2,
+            "overlap": 0,
             "perimeters": [],
             "infill_shape": [],
             "infill": [],
             "complete_fill": [],
             "flex_regions": [],
+            "print_params": {},
         }
 
         for (prop, default) in prop_defaults.items():
@@ -40,7 +42,7 @@ class Layer:
                 self.perimeters.append(LineString(poly.exterior))
 
         eroded = self.shape.buffer(-self.perimeters_gap *
-                                   self.perimeters_num - self.external_adjust/2, join_style=2)
+                                   self.perimeters_num - self.external_adjust/2 + self.overlap, join_style=2)
         if eroded.is_empty:
             self.infill_shape = []
         else:
