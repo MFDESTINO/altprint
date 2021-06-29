@@ -62,7 +62,7 @@ class BasePrint():
             layer.flex_regions[i] = rotate(layer.flex_regions[i], rotation, (100, 100)).buffer(0.1, join_style=2)
         return layer
 
-    def make_layers(self, gap, angle, rotation=0):
+    def make_layers(self, gap, angle, rotation=0, fill=rectilinear_fill):
         self.layers = []
         for i in range(1, len(self.heights)):
             polygons = self.planes[i]
@@ -87,7 +87,7 @@ class BasePrint():
                               perimeters_gap=self.perimeters_gap, overlap=self.overlap, z=self.heights[i])
                 layer.flex_regions = flex_regions
                 for shape in layer.infill_shape:
-                    infill = rectilinear_fill(shape, gap, angle)
+                    infill = fill(shape, gap, angle)
                     layer.infill.extend(infill)
                     if self.complete_fill:
                         layer.complete_fill.extend(get_remaining_lines(shape, infill))
