@@ -5,7 +5,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
     name="altprint",
-    version="0.0.3",
+    version="0.1.0",
     author="couto0",
     author_email="daniel.couto64@gmail.com",
     description="Alternative 3d printing",
@@ -20,6 +20,5 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     python_requires='>=3.6',
-    install_requires=['numpy>=1.19.4', 'Shapely>=1.7.1'],
+    install_requires=['numpy>=1.19.4', 'Shapely>=1.7.1', 'trimesh>=3.9.1', 'PuLP>=2.4'],
 )
-
