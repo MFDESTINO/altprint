@@ -29,7 +29,7 @@ class BasePrint():
             "perimeters_gap": 0.5,
             "perimeters_num": 2,
             "overlap": 0,
-            "complete_fill": True,
+            "complete_fill": False,
             "start_script": "scripts/start.gcode",
             "end_script": "scripts/end.gcode",
         }
@@ -62,7 +62,7 @@ class BasePrint():
             layer.flex_regions[i] = rotate(layer.flex_regions[i], rotation, (100, 100)).buffer(0.1, join_style=2)
         return layer
 
-    def make_layers(self, gap, angle, rotation=0, fill=rectilinear_fill):
+    def make_layers(self, gap=0.5, angle=0, rotation=0, fill=rectilinear_fill):
         self.layers = []
         for i in range(1, len(self.heights)):
             polygons = self.planes[i]

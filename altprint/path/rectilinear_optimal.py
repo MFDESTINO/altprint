@@ -177,6 +177,6 @@ def rectilinear_optimal(shape, gap, angle):
     selected_lines.extend(hlines)
     paths = linemerge(MultiLineString(selected_lines))
     if type(paths) == LineString:
-        return [paths], clines, hlines, tempo, num_var, num_restr, valor
+        return [paths]
     else:
-        return list(paths), clines, hlines, tempo, num_var, num_restr, valor
+        return list(paths)
