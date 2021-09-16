@@ -2,7 +2,8 @@ from abc import ABC, abstractmethod
 from altprint.slicer import Slicer
 from altprint.layer import Layer, LayerProcess
 from altprint.height_method import StandartHeightMethod
-
+from altprint.infill.infill import InfillMethod
+from altprint.infill.rectilinear_optimal import RectilinearOptimal
 
 class BasePrint(ABC):
     """Base Printable Object"""
@@ -32,9 +33,10 @@ class StandartPrint(BasePrint):
         self.sliced_planes = slicer.slice_model(StandartHeightMethod())
         self.heights = self.sliced_planes.get_heights()
 
-    def make_layers(self, layer_process: LayerProcess):
+    def make_layers(self, layer_process: LayerProcess, infill_method: InfillMethod):
         for height in self.heights:
             layer = Layer(self.sliced_planes.planes[height])
             layer.make_perimeter(layer_process)
             layer.make_infill_border(layer_process)
+            layer.infill = infill_method.generate_infill(layer, 0.5, 0)
             self.layers[height] = layer

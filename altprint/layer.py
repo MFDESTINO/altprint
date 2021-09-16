@@ -30,10 +30,13 @@ class Layer:
             for i in range(layer_process.perimeter_num):
                 eroded_shape = section.buffer(- layer_process.perimeter_gap*(i)
                                               - layer_process.external_adjust/2, join_style=2)
+
                 if eroded_shape.is_empty:
                     break
                 if type(eroded_shape) == Polygon:
                     polygons = [eroded_shape]
+                elif type(eroded_shape) == MultiPolygon:
+                    polygons = list(eroded_shape)
 
                 for poly in polygons:
                     for hole in poly.interiors:

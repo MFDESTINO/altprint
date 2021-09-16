@@ -41,6 +41,13 @@ class GcodeExporter:
                 self.head_x, self.head_y = x[-1], y[-1]
                 e = extrude(x, y, calculate())
                 self.gcode_content.append(self.segment(x, y, z, e, 3000))
+            for line in layer.infill:
+                x, y = line.xy
+                if LineString([(self.head_x, self.head_y), (x[0], y[0])]).length > self.min_jump:
+                    self.gcode_content.append(self.jump(x[0], y[0]))
+                self.head_x, self.head_y = x[-1], y[-1]
+                e = extrude(x, y, calculate())
+                self.gcode_content.append(self.segment(x, y, z, e, 3000))
 
     def export_gcode(self, filename):
         with open(filename, 'w') as f:
