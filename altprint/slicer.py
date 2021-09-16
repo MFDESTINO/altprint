@@ -25,17 +25,41 @@ class Slicer(ABC):
     """Slicer base object"""
 
     @abstractmethod
-    def slice_model(self, model: str, height_method: HeightMethod) -> SlicedPlanes:
+    def load_model(self, model_file: str):
+        pass
+
+    @abstractmethod
+    def translate_model(self, translation):
+        pass
+
+    @abstractmethod
+    def center_model(self, table_center) -> list:
+        pass
+
+    @abstractmethod
+    def slice_model(self, height_method: HeightMethod) -> SlicedPlanes:
         pass
 
 class STLSlicer(Slicer):
     """Slice .stl cad files"""
 
-    def slice_model(self, model: str, height_method: HeightMethod) -> SlicedPlanes:
+    def load_model(self, model_file: str):
+        self.model = trimesh.load_mesh(model_file)
 
-        mesh = trimesh.load_mesh(model)
-        heights = height_method.get_heights(mesh.bounds)
-        sections = mesh.section_multiplane([0, 0, 0], [0, 0, 1], heights)
+    def translate_model(self, translation):
+        self.model.apply_translation(translation)
+
+    def center_model(self, table_center):
+        mesh_x, mesh_y, mesh_z = self.model.extents
+        mesh_center = self.model.bounds[0] + np.array([mesh_x/2, mesh_y/2, 0])
+        table_center = np.array(table_center)
+        translation = list(table_center - mesh_center)
+        self.model.apply_translation(translation)
+        return translation
+
+    def slice_model(self, height_method: HeightMethod) -> SlicedPlanes:
+        heights = height_method.get_heights(self.model.bounds)
+        sections = self.model.section_multiplane([0, 0, 0], [0, 0, 1], heights)
         planes = {}
         for i, section in enumerate(sections):
             if section:
@@ -43,4 +67,4 @@ class STLSlicer(Slicer):
             else:
                 planes[heights[i]] = []
 
-        return SlicedPlanes(planes, mesh.bounds)
+        return SlicedPlanes(planes, self.model.bounds)

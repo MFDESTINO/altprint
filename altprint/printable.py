@@ -5,6 +5,7 @@ from altprint.height_method import StandartHeightMethod
 
 
 class BasePrint(ABC):
+    """Base Printable Object"""
 
     @abstractmethod
     def slice(self):
@@ -16,6 +17,7 @@ class BasePrint(ABC):
 
 
 class StandartPrint(BasePrint):
+    """The common print. Nothing special"""
 
     _height = float
     _layers_dict = dict[_height, Layer]
@@ -24,8 +26,10 @@ class StandartPrint(BasePrint):
         self.layers: _layers_dict = {}
         self.heights: list[float] = []
 
-    def slice(self, model: str, slicer: Slicer):
-        self.sliced_planes = slicer.slice_model(model, StandartHeightMethod())
+    def slice(self, model: str, slicer: Slicer, table_center = [100,100,0]):
+        slicer.load_model(model)
+        slicer.center_model(table_center)
+        self.sliced_planes = slicer.slice_model(StandartHeightMethod())
         self.heights = self.sliced_planes.get_heights()
 
     def make_layers(self, layer_process: LayerProcess):
