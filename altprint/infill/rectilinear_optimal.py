@@ -4,7 +4,7 @@ from shapely.affinity import rotate
 import numpy as np
 from pulp import *
 from altprint.infill.infill import InfillMethod
-from altprint.layer import Layer
+from altprint.layer import Layer, Raster
 
 def get_bounds(polygon):
     minx = polygon.bounds[0]

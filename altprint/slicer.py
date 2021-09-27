@@ -57,8 +57,9 @@ class STLSlicer(Slicer):
         self.model.apply_translation(translation)
         return translation
 
-    def slice_model(self, height_method: HeightMethod) -> SlicedPlanes:
-        heights = height_method.get_heights(self.model.bounds)
+    def slice_model(self, height_method: HeightMethod, heights = None) -> SlicedPlanes:
+        if not heights:
+            heights = height_method.get_heights(self.model.bounds)
         sections = self.model.section_multiplane([0, 0, 0], [0, 0, 1], heights)
         planes = {}
         for i, section in enumerate(sections):

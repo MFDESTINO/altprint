@@ -1,5 +1,5 @@
 from shapely.geometry import LineString
-from altprint.printable import BasePrint
+from altprint.printable.base import BasePrint
 from altprint.flow import extrude, calculate
 
 class GcodeExporter:
@@ -14,10 +14,16 @@ class GcodeExporter:
         segment = []
         segment.append('; segment\n')
         segment.append('G92 E0.0000\n')
-        segment.append('G1 Z{0:.3f} F{1:.3f}\n'.format(z, v))
+        segment.append('G1 Z{0:.3f} F{1:.3f}\n'.format(z, v[0]))
         segment.append('G1 X{0:.3f} Y{1:.3f}\n'.format(x[0], y[0]))
+
+        actual_speed = v[0]
         for i in range(len(x)-1):
-            segment.append('G1 X{0:.3f} Y{1:.3f} E{2:.4f}\n'.format(x[i+1], y[i+1], e[i+1]))
+            if actual_speed != v[i+1]:
+                segment.append('G1 X{0:.3f} Y{1:.3f} E{2:.4f} F{1:.3f} \n'.format(x[i+1], y[i+1], e[i+1], v[i+1]))
+                actual_speed = v[i+1]
+            else:
+                segment.append('G1 X{0:.3f} Y{1:.3f} E{2:.4f} \n'.format(x[i+1], y[i+1], e[i+1]))
         segment = "".join(segment)
         return segment
 
@@ -34,20 +40,19 @@ class GcodeExporter:
 
     def make_gcode(self, printable: BasePrint):
         for z, layer in printable.layers.items():
-            for line in layer.perimeter:
-                x, y = line.xy
+            for raster in layer.perimeter:
+                x, y = raster.path.xy
                 if LineString([(self.head_x, self.head_y), (x[0], y[0])]).length > self.min_jump:
                     self.gcode_content.append(self.jump(x[0], y[0]))
                 self.head_x, self.head_y = x[-1], y[-1]
-                e = extrude(x, y, calculate())
-                self.gcode_content.append(self.segment(x, y, z, e, 3000))
-            for line in layer.infill:
-                x, y = line.xy
+                self.gcode_content.append(self.segment(x, y, z, raster.extrusion, raster.speed))
+
+            for raster in layer.infill:
+                x, y = raster.path.xy
                 if LineString([(self.head_x, self.head_y), (x[0], y[0])]).length > self.min_jump:
                     self.gcode_content.append(self.jump(x[0], y[0]))
                 self.head_x, self.head_y = x[-1], y[-1]
-                e = extrude(x, y, calculate())
-                self.gcode_content.append(self.segment(x, y, z, e, 3000))
+                self.gcode_content.append(self.segment(x, y, z, raster.extrusion, raster.speed))
 
     def export_gcode(self, filename):
         with open(filename, 'w') as f:

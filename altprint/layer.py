@@ -1,14 +1,40 @@
 from shapely.geometry import Polygon, MultiPolygon, LineString, MultiLineString
+import numpy as np
+from altprint.flow import calculate
 
 
 class LayerProcess:
     """Information about layer parameters"""
 
-    def __init__(self, eadj: float = 0.5, pnum: int = 2, pgap: float = 0.5, overlap: float = 0.0):
+    def __init__(self, eadj: float = 0.5,
+                 pnum: int = 2,
+                 pgap: float = 0.5,
+                 gap: float = 0.5,
+                 overlap: float = 0.0,
+                 speed: int = 2400,
+                 flow: float = calculate()):
         self.external_adjust = eadj
         self.perimeter_num = pnum
         self.perimeter_gap = pgap
+        self.gap = gap
         self.overlap = overlap
+        self.speed = speed
+        self.flow = flow
+
+
+class Raster:
+
+    def __init__(self, path: LineString, layer_process: LayerProcess):
+
+        self.path = path
+
+        self.speed = np.ones(len(path.coords)) * layer_process.speed
+        self.extrusion = np.zeros(len(path.coords))
+        x, y = path.xy
+        for i in range(1, len(path.coords)):
+            dx = abs(x[i] - x[i - 1])
+            dy = abs(y[i] - y[i - 1])
+            self.extrusion[i] = np.sqrt((dx**2) + (dy**2)) * layer_process.flow + self.extrusion[i-1]
 
 
 class Layer:
@@ -18,14 +44,14 @@ class Layer:
         if type(shape) != MultiPolygon:
             raise TypeError("shape must be a MultiPolygon")
         self.shape = shape
-        self.perimeter: MultiLineString = MultiLineString()
-        self.infill: MultiLineString = MultiLineString()
+        self.perimeter: List
+        self.infill: List = []
         self.infill_border: MultiPolygon = MultiPolygon()
 
     def make_perimeter(self, layer_process: LayerProcess):
         """Generates the perimeter based on the layer process"""
 
-        perimeter_geoms = []
+        perimeters = []
         for section in self.shape:
             for i in range(layer_process.perimeter_num):
                 eroded_shape = section.buffer(- layer_process.perimeter_gap*(i)
@@ -40,10 +66,11 @@ class Layer:
 
                 for poly in polygons:
                     for hole in poly.interiors:
-                        perimeter_geoms.append(LineString(hole))
+                        perimeters.append(
+                            Raster(LineString(hole), layer_process))
                 for poly in polygons:
-                    perimeter_geoms.append(LineString(poly.exterior))
-        self.perimeter = MultiLineString(perimeter_geoms)
+                    perimeters.append(Raster(LineString(poly.exterior), layer_process))
+        self.perimeter = perimeters
 
     def make_infill_border(self, layer_process: LayerProcess):
         """Generates the infill border based on the layer process"""
