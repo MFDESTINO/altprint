@@ -1,10 +1,12 @@
 from shapely.geometry import LineString
 from altprint.printable.base import BasePrint
 from altprint.flow import extrude, calculate
+from altprint.printer import Printer
 
 class GcodeExporter:
 
-    def __init__(self):
+    def __init__(self, printer: Printer):
+        self.printer = printer
         self.gcode_content: list[str] = []
         self.head_x: float = 0.0
         self.head_y: float = 0.0
@@ -38,7 +40,20 @@ class GcodeExporter:
         jump = "".join(jump)
         return jump
 
+
+    def read_script(self, fname):
+        script = ""
+        with open(fname, 'r') as f:
+            script = f.readlines()
+            script = ''.join(script)
+        return script
+
     def make_gcode(self, printable: BasePrint):
+
+        start_script = self.read_script(self.printer.start_script)
+        end_script = self.read_script(self.printer.end_script)
+        self.gcode_content.append(start_script)
+
         for z, layer in printable.layers.items():
             for raster in layer.perimeter:
                 x, y = raster.path.xy
@@ -53,6 +68,8 @@ class GcodeExporter:
                     self.gcode_content.append(self.jump(x[0], y[0]))
                 self.head_x, self.head_y = x[-1], y[-1]
                 self.gcode_content.append(self.segment(x, y, z, raster.extrusion, raster.speed))
+
+        self.gcode_content.append(end_script)
 
     def export_gcode(self, filename):
         with open(filename, 'w') as f:
