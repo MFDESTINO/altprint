@@ -1,16 +1,16 @@
 from shapely.geometry import LineString
 from altprint.printable.base import BasePrint
 from altprint.flow import extrude, calculate
-from altprint.printer import Printer
 
 class GcodeExporter:
 
-    def __init__(self, printer: Printer):
-        self.printer = printer
+    def __init__(self, start_script, end_script):
         self.gcode_content: list[str] = []
         self.head_x: float = 0.0
         self.head_y: float = 0.0
         self.min_jump: float = 1
+        self.start_script_fname = start_script
+        self.end_script_fname = end_script
 
     def segment(self, x, y, z, e, v) -> str:
         segment = []
@@ -49,9 +49,10 @@ class GcodeExporter:
         return script
 
     def make_gcode(self, printable: BasePrint):
-
-        start_script = self.read_script(self.printer.start_script)
-        end_script = self.read_script(self.printer.end_script)
+        
+        self.gcode_content = []
+        start_script = self.read_script(self.start_script_fname)
+        end_script = self.read_script(self.end_script_fname)
         self.gcode_content.append(start_script)
 
         for z, layer in printable.layers.items():

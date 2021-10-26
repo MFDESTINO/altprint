@@ -137,6 +137,7 @@ def get_all(shape, gap):
     return hlines, clines, theta, c, x
 
 def rectilinear_optimal(shape, gap, angle):
+    shape = rotate(shape, angle, origin=(0,0))
     hlines, clines, theta, c, x = get_all(shape, gap)
     if not clines:
         return []
@@ -189,4 +190,4 @@ class RectilinearOptimal(InfillMethod):
         infill = []
         for border in layer.infill_border:
             infill.extend(rectilinear_optimal(border, gap, angle))
-        return MultiLineString(infill)
+        return rotate(MultiLineString(infill), -angle, origin=(0,0))

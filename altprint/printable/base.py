@@ -6,7 +6,7 @@ class BasePrint(ABC):
     """Base Printable Object"""
 
     @abstractmethod
-    def slice(self, slicer: Slicer):
+    def slice(self):
         pass
 
     @abstractmethod
