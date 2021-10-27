@@ -49,11 +49,11 @@ class STLSlicer(Slicer):
     def translate_model(self, translation):
         self.model.apply_translation(translation)
 
-    def center_model(self, table_center) -> list:
+    def center_model(self, position) -> list:
         mesh_x, mesh_y, mesh_z = self.model.extents
         mesh_center = self.model.bounds[0] + np.array([mesh_x/2, mesh_y/2, 0])
-        table_center = np.array(table_center)
-        translation = list(table_center - mesh_center)
+        position = np.array(position)
+        translation = list(position - mesh_center)
         self.model.apply_translation(translation)
         return translation
 

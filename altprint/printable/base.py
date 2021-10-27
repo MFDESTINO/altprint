@@ -12,3 +12,7 @@ class BasePrint(ABC):
     @abstractmethod
     def make_layers(self):
         pass
+
+    @abstractmethod
+    def export_gcode(self, filename):
+        pass
