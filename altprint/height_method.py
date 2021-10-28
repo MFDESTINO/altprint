@@ -21,4 +21,5 @@ class StandartHeightMethod(HeightMethod):
         h = zf - zi
         heights = list(np.linspace(zi, zf, round(h/self.layer_height)+1))
         heights[-1] = heights[-1]-0.001 #numerical adjust to make the slicer include the last layer
+        heights = list(np.around(heights, decimals=3))
         return heights

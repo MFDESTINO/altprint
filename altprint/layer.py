@@ -21,14 +21,12 @@ class Layer:
     """Layer Object that stores layer internal and external shapes, also perimeters and infill path"""
 
     def __init__(self, shape: MultiPolygon, perimeter_num, perimeter_gap, external_adjust, overlap):
-        if type(shape) != MultiPolygon:
-            raise TypeError("shape must be a MultiPolygon")
         self.shape = shape
         self.perimeter_num = perimeter_num
         self.perimeter_gap = perimeter_gap
         self.external_adjust = external_adjust
         self.overlap = overlap
-        self.perimeter: List
+        self.perimeter: List = []
         self.infill: List = []
         self.infill_border: MultiPolygon = MultiPolygon()
 
