@@ -1,6 +1,7 @@
 from shapely.geometry import LineString
 from altprint.printable.base import BasePrint
 from altprint.flow import extrude, calculate
+import numpy as np
 
 class GcodeExporter:
 
@@ -49,7 +50,7 @@ class GcodeExporter:
         return script
 
     def make_gcode(self, printable: BasePrint):
-        
+
         self.gcode_content = []
         start_script = self.read_script(self.start_script_fname)
         end_script = self.read_script(self.end_script_fname)
@@ -58,17 +59,20 @@ class GcodeExporter:
         for z, layer in printable.layers.items():
             for raster in layer.perimeter:
                 x, y = raster.path.xy
+                x, y = np.array(x), np.array(y)
+                dx, dy, dz = printable.process.offset #offset of the print
                 if LineString([(self.head_x, self.head_y), (x[0], y[0])]).length > self.min_jump:
                     self.gcode_content.append(self.jump(x[0], y[0]))
                 self.head_x, self.head_y = x[-1], y[-1]
-                self.gcode_content.append(self.segment(x, y, z, raster.extrusion, raster.speed))
+                self.gcode_content.append(self.segment(x+dx, y+dy, z+dz, raster.extrusion, raster.speed))
 
             for raster in layer.infill:
                 x, y = raster.path.xy
+                x, y = np.array(x), np.array(y)
                 if LineString([(self.head_x, self.head_y), (x[0], y[0])]).length > self.min_jump:
                     self.gcode_content.append(self.jump(x[0], y[0]))
                 self.head_x, self.head_y = x[-1], y[-1]
-                self.gcode_content.append(self.segment(x, y, z, raster.extrusion, raster.speed))
+                self.gcode_content.append(self.segment(x+dx, y+dy, z+dz, raster.extrusion, raster.speed))
 
         self.gcode_content.append(end_script)
 
