@@ -16,7 +16,7 @@ class StandartHeightMethod(HeightMethod):
         self.layer_height = layer_height
 
     def get_heights(self, bounds) -> list[float]:
-        zi = bounds[0][2]
+        zi = bounds[0][2] + self.layer_height
         zf = bounds[1][2]
         h = zf - zi
         heights = list(np.linspace(zi, zf, round(h/self.layer_height)+1))
