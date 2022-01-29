@@ -1,6 +1,7 @@
 from shapely.geometry import Polygon, LineString, Point, MultiLineString, MultiPoint, GeometryCollection, LinearRing
 from shapely.ops import linemerge, split
 from shapely.affinity import rotate
+from shapely import wkt
 import numpy as np
 from pulp import *
 from altprint.infill.infill import InfillMethod
@@ -42,7 +43,7 @@ def get_intersections(polygon, hlines):
                     intersections.append(line)
                     hlines_by_heights[i].append(line)
                 else:
-                    for line in merged:
+                    for line in merged.geoms:
                         intersections.append(line)
                         hlines_by_heights[i].append(line)
             elif type(geom) == LineString:
@@ -56,7 +57,7 @@ def geom_to_list(geom): #multilinestring or linestring to list
     if type(geom) == LineString:
         return [geom]
     else:
-        lines = list(geom)
+        lines = list(geom.geoms)
         return lines
 
 def remove_same_height_lines(hlines, clines):
@@ -75,6 +76,12 @@ def remove_same_height_lines(hlines, clines):
 
     return filtered_lines
 
+def round_coords(lines, precision):
+    rounded_lines = []
+    for line in lines:
+        rounded_lines.append(wkt.loads(wkt.dumps(line, rounding_precision=precision)))
+    return rounded_lines
+
 def get_lines(shape, gap):
     hlines = get_hlines(shape, gap)
     lines, hlines_by_heights = get_intersections(shape, hlines)
@@ -85,6 +92,12 @@ def get_lines(shape, gap):
         extra_connection_lines = geom_to_list(extra_connection_lines)
         connection_lines.extend(extra_connection_lines)
     connection_lines = remove_same_height_lines(lines, connection_lines)
+
+    precision = 6
+    r_connection_lines = round_coords(connection_lines, precision)
+    r_hlines_by_heights = []
+    for height in hlines_by_heights:
+        r_hlines_by_heights.append(round_coords(height, precision))
     return lines, connection_lines, hlines_by_heights
 
 def get_connections_by_heights(clines, polygon, gap):
@@ -93,6 +106,8 @@ def get_connections_by_heights(clines, polygon, gap):
     edges = linemerge(MultiLineString(clines))
 
     clines_by_heights = []
+    if type(edges) == LineString:
+        edges = [edges]
     theta = np.ones((len(edges), num_hlines))
     for i, edge in enumerate(edges):
         clines_by_heights.append([])
@@ -182,12 +197,12 @@ def rectilinear_optimal(shape, gap, angle):
     if type(paths) == LineString:
         return [paths]
     else:
-        return list(paths)
+        return list(paths.geoms)
 
 class RectilinearOptimal(InfillMethod):
 
     def generate_infill(self, layer: Layer, gap, angle) -> MultiLineString:
         infill = []
-        for border in layer.infill_border:
+        for border in layer.infill_border.geoms:
             infill.extend(rectilinear_optimal(border, gap, angle))
         return rotate(MultiLineString(infill), -angle, origin=(0,0))

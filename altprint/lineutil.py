@@ -13,7 +13,8 @@ def retract(path, ratio):
 def split_lines(lines, spliter):
     final = []
     for line in lines:
-        for i in list(split(line, spliter)):
+        splited = split(line, spliter)
+        for i in list(splited.geoms):
             if type(i) == LineString:
                 final.append(i)
             else:
@@ -21,7 +22,7 @@ def split_lines(lines, spliter):
     return final
 
 def split_by_regions(lines, regions):
-    final = list(lines)
+    final = list(lines.geoms)
     for region in regions:
         final = split_lines(final, region)
     return MultiLineString(final)

@@ -13,8 +13,9 @@ class StandartProcess():
             "slicer": STLSlicer,
             "infill_method": RectilinearOptimal,
             "infill_angle": [0, 90],
-            "center_model": True,
+            "center_model": False,
             "position": (100, 100, 0),
+            "offset": (0, 0, 0),
             "external_adjust": 0.5,
             "perimeter_num": 2,
             "perimeter_gap": 0.5,
@@ -57,7 +58,7 @@ class StandartPrint(BasePrint):
                           self.process.perimeter_gap,
                           self.process.external_adjust,
                           self.process.overlap)
-            layer.make_perimeter(self.process.flow, self.process.speed)
+            layer.make_perimeter()
             layer.make_infill_border()
             if type(self.process.infill_angle) == list:
                 infill_angle = self.process.infill_angle[i%len(self.process.infill_angle)]
@@ -66,7 +67,9 @@ class StandartPrint(BasePrint):
             infill_paths = infill_method.generate_infill(layer,
                                                          self.process.raster_gap,
                                                          infill_angle)
-            for path in infill_paths:
+            for path in layer.perimeter_paths:
+                layer.perimeter.append(Raster(path, self.process.flow, self.process.speed))
+            for path in infill_paths.geoms:
                 layer.infill.append(Raster(path, self.process.flow, self.process.speed))
             self.layers[height] = layer
 

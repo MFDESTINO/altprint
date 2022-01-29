@@ -15,7 +15,7 @@ class FlexProcess():
             "slicer": STLSlicer,
             "infill_method": RectilinearOptimal,
             "infill_angle": 0,
-            "center_model": True,
+            "center_model": False,
             "position": (100, 100, 0),
             "external_adjust": 0.5,
             "perimeter_num": 2,
@@ -69,18 +69,34 @@ class FlexPrint(BasePrint):
                           self.process.perimeter_gap,
                           self.process.external_adjust,
                           self.process.overlap)
-            layer.make_perimeter(self.process.flow, self.process.speed)
+            layer.make_perimeter()
             layer.make_infill_border()
             infill_paths = infill_method.generate_infill(layer,
                                                    self.process.raster_gap,
                                                    self.process.infill_angle)
             flex_regions = self.flex_planes.planes[height]
+            if not type(flex_regions) == list:
+                flex_regions == list(flex_regions.geoms)
+
+            layer.perimeter_paths = split_by_regions(layer.perimeter_paths, flex_regions)
             infill_paths = split_by_regions(infill_paths, flex_regions)
 
-            for path in infill_paths:
+            for path in layer.perimeter_paths.geoms:
                 flex_path = False
                 for region in flex_regions:
-                    if path.within(region):
+                    if path.within(region.buffer(0.01, join_style=2)):
+                        flex_path, retract_path = retract(path, self.process.retract_ratio)
+                        layer.perimeter.append(Raster(flex_path, self.process.flex_flow, self.process.flex_speed))
+                        layer.perimeter.append(Raster(retract_path, self.process.retract_flow, self.process.retract_speed))
+                        flex_path = True
+                        break
+                if not flex_path:
+                    layer.perimeter.append(Raster(path, self.process.flow, self.process.speed))
+
+            for path in infill_paths.geoms:
+                flex_path = False
+                for region in flex_regions:
+                    if path.within(region.buffer(0.01, join_style=2)):
                         flex_path, retract_path = retract(path, self.process.retract_ratio)
                         layer.infill.append(Raster(flex_path, self.process.flex_flow, self.process.flex_speed))
                         layer.infill.append(Raster(retract_path, self.process.retract_flow, self.process.retract_speed))

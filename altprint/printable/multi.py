@@ -8,7 +8,8 @@ class MultiProcess():
             "parts": [],
             "gcode_exporter": GcodeExporter,
             "start_script": "",
-            "end_script": ""
+            "end_script": "",
+            "offset": (0,0,0)
         }
 
         for (prop, default) in prop_defaults.items():
