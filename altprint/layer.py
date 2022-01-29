@@ -26,15 +26,16 @@ class Layer:
         self.perimeter_gap = perimeter_gap
         self.external_adjust = external_adjust
         self.overlap = overlap
+        self.perimeter_paths: List = []
         self.perimeter: List = []
         self.infill: List = []
         self.infill_border: MultiPolygon = MultiPolygon()
 
-    def make_perimeter(self, flow, speed):
+    def make_perimeter(self):
         """Generates the perimeter based on the layer process"""
 
-        perimeters = []
-        for section in self.shape:
+        perimeter_paths = []
+        for section in self.shape.geoms:
             for i in range(self.perimeter_num):
                 eroded_shape = section.buffer(- self.perimeter_gap*(i)
                                               - self.external_adjust/2, join_style=2)
@@ -44,21 +45,20 @@ class Layer:
                 if type(eroded_shape) == Polygon:
                     polygons = [eroded_shape]
                 elif type(eroded_shape) == MultiPolygon:
-                    polygons = list(eroded_shape)
+                    polygons = list(eroded_shape.geoms)
 
                 for poly in polygons:
                     for hole in poly.interiors:
-                        perimeters.append(
-                            Raster(LineString(hole), flow, speed))
+                        perimeter_paths.append(LineString(hole))
                 for poly in polygons:
-                    perimeters.append(Raster(LineString(poly.exterior), flow, speed))
-        self.perimeter = perimeters
+                    perimeter_paths.append(LineString(poly.exterior))
+        self.perimeter_paths = MultiLineString(perimeter_paths)
 
     def make_infill_border(self):
         """Generates the infill border based on the layer process"""
 
         infill_border_geoms = []
-        for section in self.shape:
+        for section in self.shape.geoms:
             eroded_shape = section.buffer(- self.perimeter_gap
                                           * self.perimeter_num
                                           - self.external_adjust/2
@@ -67,6 +67,6 @@ class Layer:
                 if type(eroded_shape) == Polygon:
                     infill_border_geoms.append(eroded_shape)
                 else:
-                    infill_border_geoms.extend(eroded_shape)
+                    infill_border_geoms.extend(eroded_shape.geoms)
 
         self.infill_border = MultiPolygon(infill_border_geoms)
