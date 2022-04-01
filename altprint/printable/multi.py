@@ -9,7 +9,8 @@ class MultiProcess():
             "gcode_exporter": GcodeExporter,
             "start_script": "",
             "end_script": "",
-            "offset": (0,0,0)
+            "offset": (0,0,0),
+            "verbose": True,
         }
 
         for (prop, default) in prop_defaults.items():
@@ -28,6 +29,8 @@ class MultiPrint(BasePrint):
         pass
 
     def make_layers(self):
+        if self.process.verbose == True:
+            print("Making the layers for the multipart ...")
         heights = []
         for part in self.process.parts:
             heights.extend(list(part.layers.keys()))
@@ -44,6 +47,8 @@ class MultiPrint(BasePrint):
             self.layers[h] = layer
 
     def export_gcode(self, filename):
+        if self.process.verbose == True:
+            print("exporting gcode to {}".format(filename))
         gcode_exporter = self.process.gcode_exporter(start_script=self.process.start_script,
                                                      end_script=self.process.end_script)
         gcode_exporter.make_gcode(self)

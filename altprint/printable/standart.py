@@ -19,13 +19,17 @@ class StandartProcess():
             "external_adjust": 0.5,
             "perimeter_num": 2,
             "perimeter_gap": 0.5,
+            "skirt_distance": 10,
+            "skirt_num": 3,
+            "skirt_gap": 0.5,
             "raster_gap": 0.5,
             "overlap": 0.0,
             "speed": 2400,
             "flow": calculate(),
             "gcode_exporter": GcodeExporter,
             "start_script": "",
-            "end_script": ""
+            "end_script": "",
+            "verbose": True,
         }
 
         for (prop, default) in prop_defaults.items():
@@ -43,6 +47,8 @@ class StandartPrint(BasePrint):
         self.heights: list[float] = []
 
     def slice(self):
+        if self.process.verbose == True:
+            print("slicing {} ...".format(self.process.model_file))
         slicer = self.process.slicer()
         slicer.load_model(self.process.model_file)
         if self.process.center_model:
@@ -51,7 +57,17 @@ class StandartPrint(BasePrint):
         self.heights = self.sliced_planes.get_heights()
 
     def make_layers(self):
+        if self.process.verbose == True:
+            print("generating layers ...")
         infill_method = self.process.infill_method()
+
+        skirt = Layer(self.sliced_planes.planes[self.heights[0]],
+                      self.process.skirt_num,
+                      self.process.skirt_gap,
+                      - self.process.skirt_distance - self.process.skirt_gap * self.process.skirt_num,
+                      self.process.overlap)
+        skirt.make_perimeter()
+
         for i, height in enumerate(self.heights):
             layer = Layer(self.sliced_planes.planes[height],
                           self.process.perimeter_num,
@@ -67,14 +83,24 @@ class StandartPrint(BasePrint):
             infill_paths = infill_method.generate_infill(layer,
                                                          self.process.raster_gap,
                                                          infill_angle)
-            for path in layer.perimeter_paths:
+
+            if i==0: #skirt
+                for path in skirt.perimeter_paths.geoms:
+                    layer.perimeter.append(Raster(path, self.process.flow, self.process.speed))
+
+            for path in layer.perimeter_paths.geoms:
                 layer.perimeter.append(Raster(path, self.process.flow, self.process.speed))
             for path in infill_paths.geoms:
                 layer.infill.append(Raster(path, self.process.flow, self.process.speed))
             self.layers[height] = layer
 
-    def export_gcode(self, filename):
+    def export_gcode(self, filename, insertion_file=''):
+        if self.process.verbose == True:
+            print("exporting gcode to {}".format(filename))
         gcode_exporter = self.process.gcode_exporter(start_script=self.process.start_script,
                                                      end_script=self.process.end_script)
-        gcode_exporter.make_gcode(self)
+        if insertion_file:
+            gcode_exporter.inject_gcode(self, insertion_file)
+        else:
+            gcode_exporter.make_gcode(self)
         gcode_exporter.export_gcode(filename)

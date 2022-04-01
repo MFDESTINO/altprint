@@ -107,9 +107,9 @@ def get_connections_by_heights(clines, polygon, gap):
 
     clines_by_heights = []
     if type(edges) == LineString:
-        edges = [edges]
-    theta = np.ones((len(edges), num_hlines))
-    for i, edge in enumerate(edges):
+        edges = MultiLineString([edges])
+    theta = np.ones((len(edges.geoms), num_hlines))
+    for i, edge in enumerate(edges.geoms):
         clines_by_heights.append([])
         for j in range(num_hlines):
             clines_by_heights[i].append(None)
