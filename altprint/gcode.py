@@ -1,72 +1,82 @@
 from shapely.geometry import LineString
-from altprint.flow import extrude
-from altprint.path.lineutil import retract
+from altprint.printable.base import BasePrint
+from altprint.flow import extrude, calculate
+import numpy as np
 
-def segment(x, y, z, e, v):
-    layer = []
-    layer.append('; segment\n')
-    layer.append('G92 E0.0000\n')
-    layer.append('G1 Z{0:.3f} F{1:.3f}\n'.format(z, v))
-    layer.append('G1 X{0:.3f} Y{1:.3f}\n'.format(x[0], y[0]))
-    for i in range(len(x)-1):
-        layer.append('G1 X{0:.3f} Y{1:.3f} E{2:.4f}\n'.format(x[i+1], y[i+1], e[i+1]))
-    layer = "".join(layer)
-    return layer
+class GcodeExporter:
 
-def jump(x, y, v=12000):
-    layer = []
-    layer.append('; jumping\n')
-    layer.append('G92 E3.0000\n')
-    layer.append('G1 E0 F2400\n')
-    layer.append('G1 X{0:.3f} Y{1:.3f} F{2:.3f}\n'.format(x, y, v))
-    layer.append('G1 E3 F2400\n')
-    layer.append('G92 E0.0000\n')
-    layer = "".join(layer)
-    return layer
+    def __init__(self, start_script, end_script):
+        self.gcode_content: list[str] = []
+        self.head_x: float = 0.0
+        self.head_y: float = 0.0
+        self.min_jump: float = 1
+        self.start_script_fname = start_script
+        self.end_script_fname = end_script
 
-def read_script(fname):
-    script = ""
-    with open(fname, 'r') as f:
-        script = f.readlines()
-        script = ''.join(script)
-    return script
+    def segment(self, x, y, z, e, v) -> str:
+        segment = []
+        segment.append('; segment\n')
+        segment.append('G92 E0.0000\n')
+        segment.append('G1 Z{0:.3f} F{1:.3f}\n'.format(z, v[0]))
+        segment.append('G1 X{0:.3f} Y{1:.3f}\n'.format(x[0], y[0]))
 
-def output_gcode(layers, output_name, header, footer, header_comment):
-    """
-    Generates the final gcode file
+        actual_speed = v[0]
+        for i in range(len(x)-1):
+            if actual_speed != v[i+1]:
+                segment.append('G1 X{0:.3f} Y{1:.3f} E{2:.4f} F{1:.3f} \n'.format(x[i+1], y[i+1], e[i+1], v[i+1]))
+                actual_speed = v[i+1]
+            else:
+                segment.append('G1 X{0:.3f} Y{1:.3f} E{2:.4f} \n'.format(x[i+1], y[i+1], e[i+1]))
+        segment = "".join(segment)
+        return segment
 
-    ARGS:
-    layers: list containing all layers (str)
-    output_name: output file name (str)
-    header: gcode file header (str)
-    footer: gcode file footer (str)
+    def jump(self, x, y, v=12000) -> str:
+        jump = []
+        jump.append('; jumping\n')
+        jump.append('G92 E3.0000\n')
+        jump.append('G1 E0 F2400\n')
+        jump.append('G1 X{0:.3f} Y{1:.3f} F{2:.3f}\n'.format(x, y, v))
+        jump.append('G1 E3 F2400\n')
+        jump.append('G92 E0.0000\n')
+        jump = "".join(jump)
+        return jump
 
-    """
-    with open(output_name + '.gcode', 'w') as f:
-        f.write(header_comment)
-        f.write(header)
-        for layer in layers:
-            f.write(layer)
-        f.write(footer)
 
-def segment_to_gcode(line, regions, print_params, z, x0, y0):
-    segments_gcode = []
-    for region in regions:
-        if line.within(region):
-            x, y = line.xy
-            acx, acy, cbx, cby = retract(x, y, print_params["flex_ratio"])
-            if LineString([(x0, y0), (x[0], y[0])]).length > 1:
-                segments_gcode.append(jump(x[0], y[0]))
-            x0, y0 = x[-1], y[-1]
-            e1 = extrude(acx, acy, print_params["flex_flow1"])
-            segments_gcode.append(segment(acx, acy, z, e1, print_params["flex_speed1"]))
-            e2 = extrude(cbx, cby, print_params["flex_flow2"])
-            segments_gcode.append(segment(cbx, cby, z, e2, print_params["flex_speed2"]))
-            return segments_gcode, x0, y0
-    x, y = line.xy
-    if LineString([(x0, y0), (x[0], y[0])]).length > 1:
-        segments_gcode.append(jump(x[0], y[0]))
-    x0, y0 = x[-1], y[-1]
-    e = extrude(x, y, print_params["flow"])
-    segments_gcode.append(segment(x, y, z, e, print_params["speed"]))
-    return segments_gcode, x0, y0
+    def read_script(self, fname):
+        script = ""
+        with open(fname, 'r') as f:
+            script = f.readlines()
+            script = ''.join(script)
+        return script
+
+    def make_gcode(self, printable: BasePrint):
+
+        self.gcode_content = []
+        start_script = self.read_script(self.start_script_fname)
+        end_script = self.read_script(self.end_script_fname)
+        self.gcode_content.append(start_script)
+
+        for z, layer in printable.layers.items():
+            for raster in layer.perimeter:
+                x, y = raster.path.xy
+                x, y = np.array(x), np.array(y)
+                dx, dy, dz = printable.process.offset #offset of the print
+                if LineString([(self.head_x, self.head_y), (x[0], y[0])]).length > self.min_jump:
+                    self.gcode_content.append(self.jump(x[0], y[0]))
+                self.head_x, self.head_y = x[-1], y[-1]
+                self.gcode_content.append(self.segment(x+dx, y+dy, z+dz, raster.extrusion, raster.speed))
+
+            for raster in layer.infill:
+                x, y = raster.path.xy
+                x, y = np.array(x), np.array(y)
+                if LineString([(self.head_x, self.head_y), (x[0], y[0])]).length > self.min_jump:
+                    self.gcode_content.append(self.jump(x[0], y[0]))
+                self.head_x, self.head_y = x[-1], y[-1]
+                self.gcode_content.append(self.segment(x+dx, y+dy, z+dz, raster.extrusion, raster.speed))
+
+        self.gcode_content.append(end_script)
+
+    def export_gcode(self, filename):
+        with open(filename, 'w') as f:
+            for gcode_block in self.gcode_content:
+                f.write(gcode_block)
