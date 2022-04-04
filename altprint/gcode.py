@@ -2,6 +2,7 @@ from shapely.geometry import LineString
 from altprint.printable.base import BasePrint
 from altprint.flow import extrude, calculate
 import numpy as np
+import re
 
 class GcodeExporter:
 
@@ -56,25 +57,76 @@ class GcodeExporter:
         end_script = self.read_script(self.end_script_fname)
         self.gcode_content.append(start_script)
 
+        dx, dy, dz = printable.process.offset #offset of the print
+
         for z, layer in printable.layers.items():
             for raster in layer.perimeter:
                 x, y = raster.path.xy
-                x, y = np.array(x), np.array(y)
-                dx, dy, dz = printable.process.offset #offset of the print
+                x, y = np.array(x) + dx, np.array(y) + dy
                 if LineString([(self.head_x, self.head_y), (x[0], y[0])]).length > self.min_jump:
                     self.gcode_content.append(self.jump(x[0], y[0]))
                 self.head_x, self.head_y = x[-1], y[-1]
-                self.gcode_content.append(self.segment(x+dx, y+dy, z+dz, raster.extrusion, raster.speed))
+                self.gcode_content.append(self.segment(x, y, z+dz, raster.extrusion, raster.speed))
 
             for raster in layer.infill:
                 x, y = raster.path.xy
-                x, y = np.array(x), np.array(y)
+                x, y = np.array(x) + dx, np.array(y) + dy
                 if LineString([(self.head_x, self.head_y), (x[0], y[0])]).length > self.min_jump:
                     self.gcode_content.append(self.jump(x[0], y[0]))
                 self.head_x, self.head_y = x[-1], y[-1]
-                self.gcode_content.append(self.segment(x+dx, y+dy, z+dz, raster.extrusion, raster.speed))
+                self.gcode_content.append(self.segment(x, y, z+dz, raster.extrusion, raster.speed))
 
         self.gcode_content.append(end_script)
+
+    def inject_gcode(self, printable: BasePrint, destination_file):
+
+        self.gcode_content = []
+        self.gcode_content_by_z = {}
+
+        dx, dy, dz = printable.process.offset #offset of the print
+
+        for z, layer in printable.layers.items():
+            print(z)
+            self.gcode_content_by_z[z] = []
+            for raster in layer.perimeter:
+                x, y = raster.path.xy
+                x, y = np.array(x) + dx, np.array(y) + dy
+                if LineString([(self.head_x, self.head_y), (x[0], y[0])]).length > self.min_jump:
+                    self.gcode_content_by_z[z].append(self.jump(x[0], y[0]))
+                self.head_x, self.head_y = x[-1], y[-1]
+                self.gcode_content_by_z[z].append(self.segment(x, y, z+dz, raster.extrusion, raster.speed))
+
+            for raster in layer.infill:
+                x, y = raster.path.xy
+                x, y = np.array(x) + dx, np.array(y) + dy
+                if LineString([(self.head_x, self.head_y), (x[0], y[0])]).length > self.min_jump:
+                    self.gcode_content_by_z[z].append(self.jump(x[0], y[0]))
+                self.head_x, self.head_y = x[-1], y[-1]
+                self.gcode_content_by_z[z].append(self.segment(x, y, z+dz, raster.extrusion, raster.speed))
+
+        with open(destination_file, "r") as f:
+            lines = f.readlines()
+
+        zexp = re.compile('Z[\d]*[\.[\d]+]?')
+
+        last_z = 1000
+        print(self.gcode_content_by_z.keys())
+        for line in lines:
+            z = zexp.findall(line)
+            if z:
+                z_index = float(z[0][1:])
+                if z_index - last_z > 0:
+                    if z_index in self.gcode_content_by_z.keys():
+                        self.gcode_content.append(line)
+                        self.gcode_content.append('; INSERTED BY ALTPRINT\n')
+                        self.gcode_content.append('M101\n')
+                        self.gcode_content.extend(self.gcode_content_by_z[z_index])
+                        self.gcode_content.append('M102\nG92 E0.0000\nG1 E-1.0000 F2400\nM103\n')
+                        self.gcode_content.append('; END OF INSERTION\n')
+                    else:
+                        print('index mismatch: {}'.format(z_index))
+                last_z = z_index
+            self.gcode_content.append(line)
 
     def export_gcode(self, filename):
         with open(filename, 'w') as f:
