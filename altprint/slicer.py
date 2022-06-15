@@ -43,6 +43,9 @@ class Slicer(ABC):
 class STLSlicer(Slicer):
     """Slice .stl cad files"""
 
+    def __init__(self, height_method: HeightMethod):
+        self.height_method = height_method
+
     def load_model(self, model_file: str):
         self.model = trimesh.load_mesh(model_file)
 
@@ -57,9 +60,9 @@ class STLSlicer(Slicer):
         self.model.apply_translation(translation)
         return translation
 
-    def slice_model(self, height_method: HeightMethod, heights = None) -> SlicedPlanes:
+    def slice_model(self, heights = None) -> SlicedPlanes:
         if not heights:
-            heights = height_method.get_heights(self.model.bounds)
+            heights = self.height_method.get_heights(self.model.bounds)
         sections = self.model.section_multiplane([0, 0, 0], [0, 0, 1], heights)
         planes = {}
         for i, section in enumerate(sections):

@@ -12,7 +12,7 @@ class FlexProcess():
         prop_defaults = {
             "model_file": "",
             "flex_model_file": "",
-            "slicer": STLSlicer,
+            "slicer": STLSlicer(StandartHeightMethod()),
             "infill_method": RectilinearOptimal,
             "infill_angle": 0,
             "center_model": False,
@@ -26,6 +26,7 @@ class FlexProcess():
             "skirt_distance": 10,
             "skirt_num": 3,
             "skirt_gap": 0.5,
+            "first_layer_flow": 2 * calculate(),
             "flow": calculate(),
             "speed": 2400,
             "flex_flow": 0,
@@ -56,17 +57,13 @@ class FlexPrint(BasePrint):
     def slice(self):
         if self.process.verbose == True:
             print("slicing {} ...".format(self.process.model_file))
-        slicer = self.process.slicer()
+        slicer = self.process.slicer
         slicer.load_model(self.process.model_file)
-        if self.process.center_model:
-            translation = slicer.center_model(self.process.position)
-        self.sliced_planes = slicer.slice_model(StandartHeightMethod())
+        self.sliced_planes = slicer.slice_model()
         self.heights = self.sliced_planes.get_heights()
 
         slicer.load_model(self.process.flex_model_file)
-        if self.process.center_model:
-            slicer.translate_model(translation)
-        self.flex_planes = slicer.slice_model(StandartHeightMethod(), self.heights)
+        self.flex_planes = slicer.slice_model(self.heights)
 
     def make_layers(self):
         if self.process.verbose == True:
@@ -98,9 +95,6 @@ class FlexPrint(BasePrint):
 
             layer.perimeter_paths = split_by_regions(layer.perimeter_paths, flex_regions)
             infill_paths = split_by_regions(infill_paths, flex_regions)
-            if i==0: #skirt
-                for path in skirt.perimeter_paths.geoms:
-                    layer.perimeter.append(Raster(path, self.process.flow, self.process.speed))
 
             for path in layer.perimeter_paths.geoms:
                 flex_path = False
@@ -112,7 +106,10 @@ class FlexPrint(BasePrint):
                         flex_path = True
                         break
                 if not flex_path:
-                    layer.perimeter.append(Raster(path, self.process.flow, self.process.speed))
+                    if i==0: 
+                        layer.perimeter.append(Raster(path, self.process.first_layer_flow, self.process.speed))
+                    else:
+                        layer.perimeter.append(Raster(path, self.process.flow, self.process.speed))
 
             for path in infill_paths.geoms:
                 flex_path = False
@@ -124,7 +121,10 @@ class FlexPrint(BasePrint):
                         flex_path = True
                         break
                 if not flex_path:
-                    layer.infill.append(Raster(path, self.process.flow, self.process.speed))
+                    if i==0:
+                        layer.infill.append(Raster(path, self.process.first_layer_flow, self.process.speed))
+                    else:
+                        layer.infill.append(Raster(path, self.process.flow, self.process.speed))
             self.layers[height] = layer
 
     def export_gcode(self, filename):
