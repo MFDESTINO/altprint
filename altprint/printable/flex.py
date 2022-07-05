@@ -59,23 +59,25 @@ class FlexPrint(BasePrint):
             print("slicing {} ...".format(self.process.model_file))
         slicer = self.process.slicer
         slicer.load_model(self.process.model_file)
+        slicer.translate_model(self.process.offset)
         self.sliced_planes = slicer.slice_model()
         self.heights = self.sliced_planes.get_heights()
 
         slicer.load_model(self.process.flex_model_file)
+        slicer.translate_model(self.process.offset)
         self.flex_planes = slicer.slice_model(self.heights)
 
     def make_layers(self):
         if self.process.verbose == True:
             print("generating layers ...")
         infill_method = self.process.infill_method()
-
-        skirt = Layer(self.sliced_planes.planes[self.heights[0]],
+        
+        """skirt = Layer(self.sliced_planes.planes[self.heights[0]],
                       self.process.skirt_num,
                       self.process.skirt_gap,
                       - self.process.skirt_distance - self.process.skirt_gap * self.process.skirt_num,
                       self.process.overlap)
-        skirt.make_perimeter()
+        skirt.make_perimeter()"""
 
         for i, height in enumerate(self.heights):
             layer = Layer(self.sliced_planes.planes[height],
@@ -83,6 +85,9 @@ class FlexPrint(BasePrint):
                           self.process.perimeter_gap,
                           self.process.external_adjust,
                           self.process.overlap)
+            if layer.shape == []:
+                self.layers[height] = layer
+                continue
             layer.make_perimeter()
             layer.make_infill_border()
             infill_paths = infill_method.generate_infill(layer,
@@ -95,7 +100,9 @@ class FlexPrint(BasePrint):
 
             layer.perimeter_paths = split_by_regions(layer.perimeter_paths, flex_regions)
             infill_paths = split_by_regions(infill_paths, flex_regions)
-
+            """if i==0: #skirt
+                for path in skirt.perimeter_paths.geoms:
+                    layer.perimeter.append(Raster(path, self.process.first_layer_flow, self.process.speed))"""
             for path in layer.perimeter_paths.geoms:
                 flex_path = False
                 for region in flex_regions:

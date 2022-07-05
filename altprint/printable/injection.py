@@ -8,6 +8,7 @@ class InjectionProcess():
     def __init__(self, **kwargs):
         prop_defaults = {
             "parts": [],
+            "parts_offset": [0,0,0],
             "source_gcode": '',
             "verbose": True,
         }
@@ -24,6 +25,7 @@ class InjectionPrint(BasePrint):
         self.layers_gcode = {}
         for part in self.process.parts:
             part.process.slicer = STLSlicer(CopyHeightsFromFileMethod(self.process.source_gcode))
+            part.process.offset = self.process.parts_offset
 
     def slice(self):
         for part in self.process.parts:

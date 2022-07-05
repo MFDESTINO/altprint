@@ -19,6 +19,7 @@ def get_hlines(polygon, gap):
     h_lines = []
     minx, miny, maxx, maxy = get_bounds(polygon)
     num_hlines = int((maxy - miny)/gap) + 1
+    adj_gap = (maxy-miny)/num_hlines
     heights = []
     for i in range(num_hlines):
         heights.append(gap*i+miny)

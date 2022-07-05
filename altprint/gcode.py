@@ -14,11 +14,13 @@ class GcodeExporter:
         self.start_script_fname = start_script
         self.end_script_fname = end_script
 
-    def segment(self, x, y, e, v) -> str:
+    def segment(self, x, y, z, e, v) -> str:
         segment = []
         segment.append('; segment\n')
         segment.append('G92 E0.0000\n')
         segment.append('G1 F{0:.3f}\n'.format(v[0]))
+        if z is not None:
+            segment.append('G1 Z{0:.3f}\n'.format(z))
         segment.append('G1 X{0:.3f} Y{1:.3f}\n'.format(x[0], y[0]))
 
         actual_speed = v[0]
@@ -58,24 +60,22 @@ class GcodeExporter:
         end_script = self.read_script(self.end_script_fname)
         self.gcode_content.append(start_script)
 
-        dx, dy, dz = printable.process.offset #offset of the print
-
         for z, layer in printable.layers.items():
             for raster in layer.perimeter:
                 x, y = raster.path.xy
-                x, y = np.array(x) + dx, np.array(y) + dy
+                x, y = np.array(x), np.array(y)
                 if LineString([(self.head_x, self.head_y), (x[0], y[0])]).length > self.min_jump:
                     self.gcode_content.append(self.jump(x[0], y[0]))
                 self.head_x, self.head_y = x[-1], y[-1]
-                self.gcode_content.append(self.segment(x, y, z+dz, raster.extrusion, raster.speed))
+                self.gcode_content.append(self.segment(x, y, z, raster.extrusion, raster.speed))
 
             for raster in layer.infill:
                 x, y = raster.path.xy
-                x, y = np.array(x) + dx, np.array(y) + dy
+                x, y = np.array(x), np.array(y)
                 if LineString([(self.head_x, self.head_y), (x[0], y[0])]).length > self.min_jump:
                     self.gcode_content.append(self.jump(x[0], y[0]))
                 self.head_x, self.head_y = x[-1], y[-1]
-                self.gcode_content.append(self.segment(x, y, z+dz, raster.extrusion, raster.speed))
+                self.gcode_content.append(self.segment(x, y, z, raster.extrusion, raster.speed))
 
         self.gcode_content.append(end_script)
 
@@ -87,7 +87,7 @@ class GcodeExporter:
             if LineString([(self.head_x, self.head_y), (x[0], y[0])]).length > self.min_jump:
                 layer_gcode.append(self.jump(x[0], y[0]))
             self.head_x, self.head_y = x[-1], y[-1]
-            layer_gcode.append(self.segment(x, y, raster.extrusion, raster.speed))
+            layer_gcode.append(self.segment(x, y, None, raster.extrusion, raster.speed))
 
         for raster in layer.infill:
             x, y = raster.path.xy
@@ -95,7 +95,7 @@ class GcodeExporter:
             if LineString([(self.head_x, self.head_y), (x[0], y[0])]).length > self.min_jump:
                 layer_gcode.append(self.jump(x[0], y[0]))
             self.head_x, self.head_y = x[-1], y[-1]
-            layer_gcode.append(self.segment(x, y, raster.extrusion, raster.speed))
+            layer_gcode.append(self.segment(x, y, None, raster.extrusion, raster.speed))
 
         return layer_gcode
 
