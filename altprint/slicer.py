@@ -33,11 +33,7 @@ class Slicer(ABC):
         pass
 
     @abstractmethod
-    def center_model(self, table_center) -> list:
-        pass
-
-    @abstractmethod
-    def slice_model(self, height_method: HeightMethod) -> SlicedPlanes:
+    def slice_model(self) -> SlicedPlanes:
         pass
 
 class STLSlicer(Slicer):
@@ -51,14 +47,6 @@ class STLSlicer(Slicer):
 
     def translate_model(self, translation):
         self.model.apply_translation(translation)
-
-    def center_model(self, position) -> list:
-        mesh_x, mesh_y, mesh_z = self.model.extents
-        mesh_center = self.model.bounds[0] + np.array([mesh_x/2, mesh_y/2, 0])
-        position = np.array(position)
-        translation = list(position - mesh_center)
-        self.model.apply_translation(translation)
-        return translation
 
     def slice_model(self, heights = None) -> SlicedPlanes:
         if not heights:

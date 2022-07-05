@@ -10,11 +10,9 @@ class StandartProcess():
     def __init__(self, **kwargs):
         prop_defaults = {
             "model_file": "",
-            "slicer": STLSlicer,
+            "slicer": STLSlicer(StandartHeightMethod()),
             "infill_method": RectilinearOptimal,
             "infill_angle": [0, 90],
-            "center_model": False,
-            "position": (100, 100, 0),
             "offset": (0, 0, 0),
             "external_adjust": 0.5,
             "perimeter_num": 2,
@@ -25,7 +23,7 @@ class StandartProcess():
             "raster_gap": 0.5,
             "overlap": 0.0,
             "speed": 2400,
-            "flow": calculate(),
+            "flow": calculate(adjust=1.2),
             "gcode_exporter": GcodeExporter,
             "start_script": "",
             "end_script": "",
@@ -49,11 +47,10 @@ class StandartPrint(BasePrint):
     def slice(self):
         if self.process.verbose == True:
             print("slicing {} ...".format(self.process.model_file))
-        slicer = self.process.slicer()
+        slicer = self.process.slicer
         slicer.load_model(self.process.model_file)
-        if self.process.center_model:
-            slicer.center_model(self.process.position)
-        self.sliced_planes = slicer.slice_model(StandartHeightMethod())
+        slicer.translate_model(self.process.offset)
+        self.sliced_planes = slicer.slice_model()
         self.heights = self.sliced_planes.get_heights()
 
     def make_layers(self):
