@@ -91,13 +91,10 @@ class StandartPrint(BasePrint):
                 layer.infill.append(Raster(path, self.process.flow, self.process.speed))
             self.layers[height] = layer
 
-    def export_gcode(self, filename, insertion_file=''):
+    def export_gcode(self, filename):
         if self.process.verbose == True:
             print("exporting gcode to {}".format(filename))
         gcode_exporter = self.process.gcode_exporter(start_script=self.process.start_script,
                                                      end_script=self.process.end_script)
-        if insertion_file:
-            gcode_exporter.inject_gcode(self, insertion_file)
-        else:
-            gcode_exporter.make_gcode(self)
+        gcode_exporter.make_gcode(self)
         gcode_exporter.export_gcode(filename)
