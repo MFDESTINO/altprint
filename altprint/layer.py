@@ -14,7 +14,7 @@ class Raster:
         for i in range(1, len(path.coords)):
             dx = abs(x[i] - x[i - 1])
             dy = abs(y[i] - y[i - 1])
-            self.extrusion[i] = np.sqrt((dx**2) + (dy**2)) * flow + self.extrusion[i-1]
+            self.extrusion[i] = np.sqrt((dx**2) + (dy**2)) * flow * calculate() + self.extrusion[i-1]
 
 
 class Layer:

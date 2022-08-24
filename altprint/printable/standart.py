@@ -3,8 +3,8 @@ from altprint.slicer import STLSlicer
 from altprint.layer import Layer, Raster
 from altprint.height_method import StandartHeightMethod
 from altprint.infill.rectilinear_optimal import RectilinearOptimal
-from altprint.flow import calculate
 from altprint.gcode import GcodeExporter
+from altprint.settingsparser import SettingsParser
 
 class StandartProcess():
     def __init__(self, **kwargs):
@@ -23,15 +23,21 @@ class StandartProcess():
             "raster_gap": 0.5,
             "overlap": 0.0,
             "speed": 2400,
-            "flow": calculate(adjust=1.2),
+            "flow": 1.2,
             "gcode_exporter": GcodeExporter,
             "start_script": "",
             "end_script": "",
             "verbose": True,
         }
 
+
         for (prop, default) in prop_defaults.items():
             setattr(self, prop, kwargs.get(prop, default))
+
+        if 'settings_file' in kwargs.keys():
+            settings = SettingsParser().load_from_file(kwargs['settings_file'])
+            for (setting, value) in settings.items():
+                setattr(self, setting, value)
 
 class StandartPrint(BasePrint):
     """The common print. Nothing special"""

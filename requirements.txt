@@ -5,3 +5,4 @@ PuLP>=2.4
 scipy>=1.7.0
 networkx>=2.5.1
 rtree>=0.9.7
+PyYAML >= 6.0
