@@ -1,0 +1,16 @@
+model_file: cube.stl
+start_script: scripts/start.gcode
+end_script: scripts/end.gcode
+infill_angle: [0, 90]
+infill_gap: 5
+offset: [100, 100, 0]
+external_adjust: 0.5
+perimeter_num: 2
+perimeter_gap: 0.5
+skirt_distance: 10
+skirt_num: 3
+skirt_gap: 0.5
+overlap: 0.0
+speed: 2400
+flow: 1.2
+verbose: True
