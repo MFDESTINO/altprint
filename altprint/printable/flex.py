@@ -6,6 +6,7 @@ from altprint.infill.rectilinear_optimal import RectilinearOptimal
 from altprint.flow import calculate
 from altprint.gcode import GcodeExporter
 from altprint.lineutil import split_by_regions, retract
+from altprint.settingsparser import SettingsParser
 
 class FlexProcess():
     def __init__(self, **kwargs):
@@ -40,6 +41,12 @@ class FlexProcess():
 
         for (prop, default) in prop_defaults.items():
             setattr(self, prop, kwargs.get(prop, default))
+        
+        if 'settings_file' in kwargs.keys():
+            settings = SettingsParser().load_from_file(kwargs['settings_file'])
+            for (setting, value) in settings.items():
+                setattr(self, setting, value)
+
 
 class FlexPrint(BasePrint):
     """The common print. Nothing special"""
