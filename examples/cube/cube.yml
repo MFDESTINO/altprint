@@ -2,7 +2,7 @@ model_file: cube.stl
 start_script: scripts/start.gcode
 end_script: scripts/end.gcode
 infill_angle: [0, 90]
-infill_gap: 5
+infill_gap: 0.5
 offset: [100, 100, 0]
 external_adjust: 0.5
 perimeter_num: 2
