@@ -1,0 +1,23 @@
+model_file: bar.stl
+flex_model_file: flex.stl
+start_script: scripts/start.gcode
+end_script: scripts/end.gcode
+infill_angle: 90
+infill_gap: 0.5
+offset: [150, 100, 0]
+external_adjust: 0.5
+perimeter_num: 2
+perimeter_gap: 0.5
+skirt_distance: 10
+skirt_num: 3
+skirt_gap: 0.5
+overlap: 0.0
+first_layer_flow: 2
+flow: 1.2
+speed: 2400
+flex_flow: 0.1
+flex_speed: 2000
+retract_flow: 2
+retract_speed: 1200
+retract_ratio: 0.9
+verbose: True
