@@ -77,12 +77,12 @@ class FlexPrint(BasePrint):
             print("generating layers ...")
         infill_method = self.process.infill_method()
         
-        """skirt = Layer(self.sliced_planes.planes[self.heights[0]],
+        skirt = Layer(self.sliced_planes.planes[self.heights[0]],
                       self.process.skirt_num,
                       self.process.skirt_gap,
                       - self.process.skirt_distance - self.process.skirt_gap * self.process.skirt_num,
                       self.process.overlap)
-        skirt.make_perimeter()"""
+        skirt.make_perimeter()
 
         for i, height in enumerate(self.heights):
             layer = Layer(self.sliced_planes.planes[height],
@@ -105,9 +105,9 @@ class FlexPrint(BasePrint):
 
             layer.perimeter_paths = split_by_regions(layer.perimeter_paths, flex_regions)
             infill_paths = split_by_regions(infill_paths, flex_regions)
-            """if i==0: #skirt
+            if i==0: #skirt
                 for path in skirt.perimeter_paths.geoms:
-                    layer.perimeter.append(Raster(path, self.process.first_layer_flow, self.process.speed))"""
+                    layer.perimeter.append(Raster(path, self.process.first_layer_flow, self.process.speed))
             for path in layer.perimeter_paths.geoms:
                 flex_path = False
                 for region in flex_regions:
