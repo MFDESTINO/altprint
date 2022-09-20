@@ -26,6 +26,25 @@ def get_connection_lines(shape):
             connection_lines.append(LineString([points[i], points[i+1]]))
     return connection_lines
 
+def make_x_matrix(shape, gap):
+    coords = shape.coords
+    x, y = shape.xy
+    max_y = shape.bounds[3]
+    xv = np.unique(x)
+    xm = np.ones([len(xv), int(max_y, gap)]) * -1
+    
+    for i in range(len(coords)-1):
+        a = coords[i]
+        b = coords[i+1]
+        dy = (b[1] - a[1])
+        ys = np.array([])
+        if dy > thres: #b > a
+            ys = np.arange(np.ceil(a[1]/gap), np.floor(b[1]/gap)+1)*gap
+        if dy < -thres: #b < a
+            ys = np.arange(np.ceil(b[1]/gap), np.floor(a[1]/gap)+1)*gap
+        xs = x_from_y(a, b, ys)
+        points = list(zip(xs, ys))
+
 if __name__ == "__main__":
     import matplotlib.pyplot as plt
 
@@ -37,15 +56,15 @@ if __name__ == "__main__":
     gap = 2
     thres = 0
     connection_lines = get_connection_lines(poly.exterior)
-    for hole in poly.interiors:
-        connection_lines.extend(get_connection_lines(hole))
+    #for hole in poly.interiors:
+    #   connection_lines.extend(get_connection_lines(hole))
     fig, ax = plt.subplots()
 
     x, y = poly.exterior.xy
     ax.plot(x, y, color="black", linewidth=3)
-    for hole in poly.interiors:
-        x, y = hole.xy
-        ax.plot(x, y, color="black", linewidth=3)
+    #for hole in poly.interiors:
+    #   x, y = hole.xy
+    #  ax.plot(x, y, color="black", linewidth=3)
         
     for line in connection_lines:
         x, y = line.xy
