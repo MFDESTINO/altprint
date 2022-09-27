@@ -9,7 +9,7 @@ def x_from_y(a, b, yc):
         return np.ones(len(yc))*a[0]
     return (yc - a[1])*dx/dy + a[0]
 
-def get_column(a, b, gap, height):
+def get_column(a, b, gap, height, hole):
     maxy = max(a[1], b[1])
     miny = min(a[1], b[1])
     dy = b[1] - a[1]
@@ -22,16 +22,20 @@ def get_column(a, b, gap, height):
     col = np.ma.array(np.zeros(height), mask=mask)
     col[start:end] = xs
     if dy > 0:
-        fill_col = np.ma.array(np.zeros(height), mask=mask)
+        if not hole:
+            fill_col = np.ma.array(np.zeros(height), mask=mask)
+        else:
+            fill_col = np.ma.array(np.ones(height), mask=mask)
     else:
-        fill_col = np.ma.array(np.ones(height), mask=mask)
+        if not hole:
+            fill_col = np.ma.array(np.ones(height), mask=mask)
+        else:
+            fill_col = np.ma.array(np.zeros(height), mask=mask)
     used_col = np.ma.array(np.zeros(height), mask=mask)
     return col, fill_col, used_col
 
-def get_cols(shape, gap, thres):
+def get_cols(shape, gap, thres, height, hole):
     coords = shape.coords
-    x, y = shape.xy
-    height = int(np.floor(shape.bounds[3]/gap)+1)
     cols = []
     fill = []
     used = []
@@ -41,7 +45,7 @@ def get_cols(shape, gap, thres):
         dx = b[0] - a[0]
         dy = b[1] - a[1]
         if abs(dy) > thres:
-            col, fill_col, used_col = get_column(a, b, gap, height)    
+            col, fill_col, used_col = get_column(a, b, gap, height, hole)    
             cols.append(col)
             fill.append(fill_col)
             used.append(used_col)
@@ -103,7 +107,7 @@ def find_path(cols, fill, used, i0, j0, d, gap):
         else:
             return path
 
-def rectilinear_fill(cols, fill, used, gap):
+def get_rectilinear_path(cols, fill, used, gap):
     m, n = cols.shape
     paths = []
     d = True
@@ -115,30 +119,36 @@ def rectilinear_fill(cols, fill, used, gap):
                     paths.append(path)
     return MultiLineString(paths)
 
-def print_matrix(m):
-    rowf = "{:3.2f} "* m.shape[1]
-    for row in m:
-        print(rowf.format(*row))
+def rectilinear_fill(shape, gap, thres):
+    height = int(np.floor(shape.bounds[3]/gap)+1)
+    cols, fill, used = get_cols(shape.exterior, gap, thres, height, False)
+    for hole in shape.interiors:
+        cols2, fill2, used2 = get_cols(hole, gap, thres, height, True)
+        cols = np.ma.append(cols, cols2, 0)
+        fill = np.ma.append(fill, fill2, 0)
+        used = np.ma.append(used, used2, 0)
+    sort_cols(cols, fill, used)
+    paths = get_rectilinear_path(cols, fill, used, gap)
+    return paths
+
 
 if __name__ == "__main__":
     import matplotlib.pyplot as plt
-    np.set_printoptions(precision=3)
     #shape = Polygon([(0,0), (10,0), (10, 10), (0, 10)])
     border = [(0, 0), (10, 0), (10, 10), (20, 10), (20, 5), (30, 5), (30, 40), (10,25), (0, 30), (3, 15)]
     holes = [[(5, 15), (15, 15), (15, 20), (5, 20)], [(20, 25), (25, 25), (25, 30)]]
     poly = Polygon(border, holes)
-
-    gap = 3
+    gap = 0.5
     thres = 0
-    cols, fill, used = get_cols(poly.exterior, gap, thres)
-    sort_cols(cols, fill, used)
-    paths = rectilinear_fill(cols, fill, used, gap)
+
+    paths = rectilinear_fill(poly, gap, thres)
+
     fig, ax = plt.subplots()
     x, y = poly.exterior.xy
     ax.plot(x, y, color="black", linewidth=3)
 
     for path in paths.geoms:
         x, y = path.xy
-        ax.plot(x, y, linewidth=5)
+        ax.plot(x, y, linewidth=2)
     ax.axis("equal")
     plt.show()
