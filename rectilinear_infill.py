@@ -1,6 +1,8 @@
 from shapely.geometry import LineString, Polygon, MultiLineString
+from shapely.affinity import translate, rotate
 import numpy as np
 from collections import deque
+
 
 def x_from_y(a, b, yc):
     dx = b[0]-a[0]
@@ -52,7 +54,9 @@ def get_cols(shape, gap, thres, height, hole):
     return np.ma.array(cols), np.ma.array(fill), np.ma.array(used)
 
 def sort_cols(cols, fill, used):
-    for i in range(cols.shape[1]):
+    r = list(range(cols.shape[1])) + list(range(cols.shape[1]-2, -1, -1))
+    #r = list(range(cols.shape[1]))
+    for i in r:
         col = cols[:,i]
         valid_indexes = (col+1).nonzero()[0]
         sorted_indexes = valid_indexes[col[valid_indexes].argsort()]
@@ -119,33 +123,44 @@ def get_rectilinear_path(cols, fill, used, gap):
                     paths.append(path)
     return MultiLineString(paths)
 
-def rectilinear_fill(shape, gap, thres):
-    height = int(np.floor(shape.bounds[3]/gap)+1)
-    cols, fill, used = get_cols(shape.exterior, gap, thres, height, False)
-    for hole in shape.interiors:
+def rectilinear_fill(shape, gap, angle=0, thres=0):
+    r_shape = rotate(shape, angle, origin=(0,0))
+    tr_shape = translate(r_shape, -r_shape.bounds[0], -r_shape.bounds[1])
+    height = int(np.floor(tr_shape.bounds[3]/gap)+1)
+    cols, fill, used = get_cols(tr_shape.exterior, gap, thres, height, False)
+    for hole in tr_shape.interiors:
         cols2, fill2, used2 = get_cols(hole, gap, thres, height, True)
         cols = np.ma.append(cols, cols2, 0)
         fill = np.ma.append(fill, fill2, 0)
         used = np.ma.append(used, used2, 0)
     sort_cols(cols, fill, used)
     paths = get_rectilinear_path(cols, fill, used, gap)
+    paths = translate(paths, r_shape.bounds[0], r_shape.bounds[1])
+    paths = rotate(paths, -angle, origin=(0,0))
     return paths
 
 
 if __name__ == "__main__":
     import matplotlib.pyplot as plt
     #shape = Polygon([(0,0), (10,0), (10, 10), (0, 10)])
-    border = [(0, 0), (10, 0), (10, 10), (20, 10), (20, 5), (30, 5), (30, 40), (10,25), (0, 30), (3, 15)]
+    border = [(0, 0), (10, 0), (10, 10), (20, 10), (20, 5), (30, 5), (30, 40), (10,25), (0, 30)]
     holes = [[(5, 15), (15, 15), (15, 20), (5, 20)], [(20, 25), (25, 25), (25, 30)]]
     poly = Polygon(border, holes)
-    gap = 0.5
+    gap = 0.1
     thres = 0
+    angle = 20
 
-    paths = rectilinear_fill(poly, gap, thres)
+    r_shape = rotate(poly, angle, origin=(0,0))
+    tr_poly = translate(r_shape, -r_shape.bounds[0], -r_shape.bounds[1])
+
+    paths = rectilinear_fill(tr_poly, gap, 0, thres)
 
     fig, ax = plt.subplots()
-    x, y = poly.exterior.xy
+    x, y = tr_poly.exterior.xy
     ax.plot(x, y, color="black", linewidth=3)
+    for hole in tr_poly.interiors:
+        x, y = hole.xy
+        ax.plot(x, y, color="black", linewidth=3)
 
     for path in paths.geoms:
         x, y = path.xy
