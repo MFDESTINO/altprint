@@ -1,6 +1,8 @@
 from shapely.geometry import Polygon, MultiLineString
 from shapely.affinity import translate, rotate
 import numpy as np
+from altprint.infill.infill import InfillMethod
+from altprint.layer import Layer
 
 
 def x_from_y(a, b, yc):
@@ -145,17 +147,27 @@ def rectilinear_fill(shape, gap, angle=0, thres=0):
     paths = rotate(paths, -angle, origin=(0,0))
     return paths
 
+class RectilinearInfill(InfillMethod):
+
+    def generate_infill(self, layer: Layer, gap, angle) -> MultiLineString:
+        infill = []
+        for border in layer.infill_border.geoms:
+            paths = rectilinear_fill(border, gap, angle)
+            infill.extend(paths.geoms)
+        return MultiLineString(infill)
+
+
 
 if __name__ == "__main__":
     import matplotlib.pyplot as plt
-    poly = Polygon([(0,0), (17.5,0), (17.5, 17.5), (0, 17.5)])
+    #shape = Polygon([(0,0), (10,0), (10, 10), (0, 10)])
     border = [(0, 0), (10, 0), (10, 10), (20, 10), (20, 5), (30, 5), (30, 40), (10,25), (0, 30)]
     holes = [[(5, 15), (15, 15), (15, 20), (5, 20)], [(20, 25), (25, 25), (25, 30)]]
     #holes = [[(5, 15), (15, 15), (15, 20), (5, 20)]]
     poly = Polygon(border, holes)
-    gap = 0.5
+    gap = 2
     thres = 0
-    angle = 0
+    angle = 20
 
     r_shape = rotate(poly, angle, origin=(0,0))
     tr_poly = translate(r_shape, -r_shape.bounds[0], -r_shape.bounds[1])
