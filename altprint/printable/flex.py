@@ -2,7 +2,7 @@ from altprint.printable.base import BasePrint
 from altprint.slicer import STLSlicer
 from altprint.layer import Layer, Raster
 from altprint.height_method import StandartHeightMethod
-from altprint.infill.rectilinear_optimal import RectilinearOptimal
+from altprint.infill.rectilinear_infill import RectilinearInfill
 from altprint.flow import calculate
 from altprint.gcode import GcodeExporter
 from altprint.lineutil import split_by_regions, retract
@@ -14,7 +14,7 @@ class FlexProcess():
             "model_file": "",
             "flex_model_file": "",
             "slicer": STLSlicer(StandartHeightMethod()),
-            "infill_method": RectilinearOptimal,
+            "infill_method": RectilinearInfill,
             "infill_angle": 0,
             "offset": (0, 0, 0),
             "external_adjust": 0.5,
