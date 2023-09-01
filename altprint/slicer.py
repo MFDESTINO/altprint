@@ -1,5 +1,4 @@
 from abc import ABC, abstractmethod
-import numpy as np
 import trimesh
 from shapely.geometry import MultiPolygon
 from altprint.height_method import HeightMethod

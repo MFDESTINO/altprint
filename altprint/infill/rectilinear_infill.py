@@ -48,7 +48,6 @@ def get_cols(shape, gap, thres, height, hole):
     for i in range(len(coords)-1):
         a = coords[i]
         b = coords[i+1]
-        dx = b[0] - a[0]
         dy = b[1] - a[1]
         if abs(dy) > thres:
             col, fill_col, used_col = get_column(a, b, gap, height, hole)    
@@ -106,11 +105,11 @@ def find_path(cols, fill, used, i0, j0, d, gap):
                 return path
         else:
             return path
-        l = next_con(cols, fill, i, j)
-        if l is not None:
-            if used[i][l] == 0:
-                used[i][l] = 1
-                j = l
+        l1 = next_con(cols, fill, i, j)
+        if l1 is not None:
+            if used[i][l1] == 0:
+                used[i][l1] = 1
+                j = l1
                 path.append((cols[i][j], j*gap))
             else:
                 return path
@@ -161,7 +160,7 @@ class RectilinearInfill(InfillMethod):
 if __name__ == "__main__":
     import matplotlib.pyplot as plt
     #shape = Polygon([(0,0), (10,0), (10, 10), (0, 10)])
-    border = [(0, 0), (10, 0), (10, 10), (20, 10), (20, 5), (30, 5), (30, 40), (10,25), (0, 30)]
+    border = [(0, 0), (10, 0), (10, 10), (20, 10), (20, 5), (30, 5), (30, 40), (10,25), (0, 30)] # noqa: E501
     holes = [[(5, 15), (15, 15), (15, 20), (5, 20)], [(20, 25), (25, 25), (25, 30)]]
     #holes = [[(5, 15), (15, 15), (15, 20), (5, 20)]]
     poly = Polygon(border, holes)

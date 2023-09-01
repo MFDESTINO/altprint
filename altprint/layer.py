@@ -14,21 +14,21 @@ class Raster:
         for i in range(1, len(path.coords)):
             dx = abs(x[i] - x[i - 1])
             dy = abs(y[i] - y[i - 1])
-            self.extrusion[i] = np.sqrt((dx**2) + (dy**2)) * flow * calculate() + self.extrusion[i-1]
+            self.extrusion[i] = np.sqrt((dx**2) + (dy**2)) * flow * calculate() + self.extrusion[i-1] # noqa: E501
 
 
 class Layer:
-    """Layer Object that stores layer internal and external shapes, also perimeters and infill path"""
+    """Layer Object that stores layer internal and external shapes, also perimeters and infill path""" # noqa: E501
 
-    def __init__(self, shape: MultiPolygon, perimeter_num, perimeter_gap, external_adjust, overlap):
+    def __init__(self, shape: MultiPolygon, perimeter_num, perimeter_gap, external_adjust, overlap): # noqa: E501
         self.shape = shape
         self.perimeter_num = perimeter_num
         self.perimeter_gap = perimeter_gap
         self.external_adjust = external_adjust
         self.overlap = overlap
-        self.perimeter_paths: List = []
-        self.perimeter: List = []
-        self.infill: List = []
+        self.perimeter_paths: List = [] #noqa: F821
+        self.perimeter: List = [] #noqa: F821
+        self.infill: List = [] #noqa: F821
         self.infill_border: MultiPolygon = MultiPolygon()
 
     def make_perimeter(self):

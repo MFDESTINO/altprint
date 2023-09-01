@@ -23,13 +23,13 @@ class MultiPrint(BasePrint):
 
     def __init__(self, process):
         self.process = process
-        self.layers: _layers_dict = {}
+        self.layers: _layers_dict = {} #noqa: F821
 
     def slice(self):
         pass
 
     def make_layers(self):
-        if self.process.verbose == True:
+        if self.process.verbose is True:
             print("Making the layers for the multipart ...")
         heights = []
         for part in self.process.parts:
@@ -47,9 +47,9 @@ class MultiPrint(BasePrint):
             self.layers[h] = layer
 
     def export_gcode(self, filename):
-        if self.process.verbose == True:
+        if self.process.verbose is True:
             print("exporting gcode to {}".format(filename))
-        gcode_exporter = self.process.gcode_exporter(start_script=self.process.start_script,
+        gcode_exporter = self.process.gcode_exporter(start_script=self.process.start_script, #noqa: E501
                                                      end_script=self.process.end_script)
         gcode_exporter.make_gcode(self)
         gcode_exporter.export_gcode(filename)

@@ -1,8 +1,6 @@
 from shapely.geometry import LineString
 from altprint.printable.base import BasePrint
-from altprint.flow import extrude, calculate
 import numpy as np
-import re
 
 class GcodeExporter:
 
@@ -26,10 +24,10 @@ class GcodeExporter:
         actual_speed = v[0]
         for i in range(len(x)-1):
             if actual_speed != v[i+1]:
-                segment.append('G1 X{0:.3f} Y{1:.3f} E{2:.4f} F{1:.3f} \n'.format(x[i+1], y[i+1], e[i+1], v[i+1]))
+                segment.append('G1 X{0:.3f} Y{1:.3f} E{2:.4f} F{1:.3f} \n'.format(x[i+1], y[i+1], e[i+1], )) # noqa: E501
                 actual_speed = v[i+1]
             else:
-                segment.append('G1 X{0:.3f} Y{1:.3f} E{2:.4f} \n'.format(x[i+1], y[i+1], e[i+1]))
+                segment.append('G1 X{0:.3f} Y{1:.3f} E{2:.4f} \n'.format(x[i+1], y[i+1], e[i+1])) # noqa: E501
         segment.append('G92 E0.0000\n')
         segment = "".join(segment)
         return segment
@@ -64,18 +62,18 @@ class GcodeExporter:
             for raster in layer.perimeter:
                 x, y = raster.path.xy
                 x, y = np.array(x), np.array(y)
-                if LineString([(self.head_x, self.head_y), (x[0], y[0])]).length > self.min_jump:
+                if LineString([(self.head_x, self.head_y), (x[0], y[0])]).length > self.min_jump: # noqa: E501
                     self.gcode_content.append(self.jump(x[0], y[0]))
                 self.head_x, self.head_y = x[-1], y[-1]
-                self.gcode_content.append(self.segment(x, y, z, raster.extrusion, raster.speed))
+                self.gcode_content.append(self.segment(x, y, z, raster.extrusion, raster.speed)) # noqa: E501
 
             for raster in layer.infill:
                 x, y = raster.path.xy
                 x, y = np.array(x), np.array(y)
-                if LineString([(self.head_x, self.head_y), (x[0], y[0])]).length > self.min_jump:
+                if LineString([(self.head_x, self.head_y), (x[0], y[0])]).length > self.min_jump: # noqa: E501
                     self.gcode_content.append(self.jump(x[0], y[0]))
                 self.head_x, self.head_y = x[-1], y[-1]
-                self.gcode_content.append(self.segment(x, y, z, raster.extrusion, raster.speed))
+                self.gcode_content.append(self.segment(x, y, z, raster.extrusion, raster.speed)) # noqa: E501
 
         self.gcode_content.append(end_script)
 
@@ -84,7 +82,7 @@ class GcodeExporter:
         for raster in layer.perimeter:
             x, y = raster.path.xy
             x, y = np.array(x), np.array(y)
-            if LineString([(self.head_x, self.head_y), (x[0], y[0])]).length > self.min_jump:
+            if LineString([(self.head_x, self.head_y), (x[0], y[0])]).length > self.min_jump: # noqa: E501
                 layer_gcode.append(self.jump(x[0], y[0]))
             self.head_x, self.head_y = x[-1], y[-1]
             layer_gcode.append(self.segment(x, y, None, raster.extrusion, raster.speed))
@@ -92,7 +90,7 @@ class GcodeExporter:
         for raster in layer.infill:
             x, y = raster.path.xy
             x, y = np.array(x), np.array(y)
-            if LineString([(self.head_x, self.head_y), (x[0], y[0])]).length > self.min_jump:
+            if LineString([(self.head_x, self.head_y), (x[0], y[0])]).length > self.min_jump: # noqa: E501
                 layer_gcode.append(self.jump(x[0], y[0]))
             self.head_x, self.head_y = x[-1], y[-1]
             layer_gcode.append(self.segment(x, y, None, raster.extrusion, raster.speed))

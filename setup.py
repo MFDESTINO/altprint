@@ -20,5 +20,5 @@ setuptools.setup(
         "Operating System :: OS Independent",
     ],
     python_requires='>=3.6',
-    install_requires=['numpy>=1.19.4', 'Shapely>=1.7.1', 'trimesh>=3.9.1', 'PuLP>=2.4', 'scipy>=1.7.0', 'networkx>=2.5.1', 'rtree>=0.9.7', 'PyYAML>=6.0'],
+    install_requires=['numpy>=1.19.4', 'Shapely>=1.7.1', 'trimesh>=3.9.1', 'PuLP>=2.4', 'scipy>=1.7.0', 'networkx>=2.5.1', 'rtree>=0.9.7', 'PyYAML>=6.0'], # noqa: E501
 )

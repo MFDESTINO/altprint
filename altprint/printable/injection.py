@@ -21,10 +21,10 @@ class InjectionPrint(BasePrint):
 
     def __init__(self, process: InjectionProcess):
         self.process = process
-        self.layers: _layers_dict = {}
+        self.layers: _layers_dict = {} # noqa: F821
         self.layers_gcode = {}
         for part in self.process.parts:
-            part.process.slicer = STLSlicer(CopyHeightsFromFileMethod(self.process.source_gcode))
+            part.process.slicer = STLSlicer(CopyHeightsFromFileMethod(self.process.source_gcode)) #noqa: E501
             part.process.offset = self.process.parts_offset
 
     def slice(self):
